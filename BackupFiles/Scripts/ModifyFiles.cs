@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text;
 using Util;
 
@@ -72,6 +71,13 @@ namespace BackUp{
                 using StreamReader sr = new(fs);
                 string? temp;
                 while((temp = sr.ReadLine()) is not null){
+                    if(temp.Length < 3){
+                        ModifyFiles.WriteLog("Error Parsing to short: " + temp);
+                        continue;
+                    }else if(temp[1] != ':'){
+                        ModifyFiles.WriteLog("Error Parsing no (':') in: " + temp);
+                        continue;
+                    }
                     char c = temp[0];
                     Data_Path data = new(c,temp[2..]);
                     input.Add(data);
