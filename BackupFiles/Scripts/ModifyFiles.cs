@@ -1,8 +1,8 @@
 using System.Text;
-using static Utils;
+using Util;
 
 namespace BackUp{
-    public class Info{
+    public class ModifyFiles{
         private const string logPath = @".\Log.log";
         private const string dataFilePath = @".\Data";
         public static void CreateLog(){ //Create Log.log file
@@ -36,48 +36,59 @@ namespace BackUp{
                 using StreamWriter sw = new(fs);
                 sw.WriteLine(GetTime() + s);
                 sw.Close();
+                fs.Close();
             }
             catch{
                 throw;
             }
         }
-        public static bool WriteData(string s, char c){ //Write index Data file
+        public static bool WriteData(Data_Path data_Paths){ //Write index Data file
             if(!File.Exists(dataFilePath)){
                 CreateDataFile();
             }
             try{
                 using FileStream fs = new(dataFilePath, FileMode.Append, FileAccess.Write);
-                using StreamWriter sw = new(fs);
-                string temp = c + ':' + s;
-                sw.WriteLine(temp);
+                using StreamWriter sw = new(fs);;
+                sw.WriteLine(data_Paths.ToString());
                 sw.Close();
+                fs.Close();
             }
             catch(Exception e){
-                Console.WriteLine("Error occured adding: " + s);
-                Info.WriteLog(e + " at: " + s);
+                Console.WriteLine("Error occured adding: " + data_Paths.path);
+                ModifyFiles.WriteLog(e + " at: " + data_Paths.path);
                 return false;
             }
             return true;
         }
-        public static Data_Paths[]? ReadData(){ //Read all indexes from Data file
+        public static List<Data_Path> ReadData(){ //Read all indexes from Data file
+            List<Data_Path> input = new();
             if(!File.Exists(dataFilePath)){
-                return null;
+                CreateDataFile();
+                return input;
             }
-            List<Data_Paths> input = new();
             try{
-                using FileStream fs = new(dataFilePath, FileMode.Append, FileAccess.Read);
+                using FileStream fs = new(dataFilePath, FileMode.Open, FileAccess.Read);
                 using StreamReader sr = new(fs);
                 string? temp;
                 while((temp = sr.ReadLine()) is not null){
-                    Data_Paths data = new(temp[0],temp[2..]);
+                    if(temp.Length < 3){
+                        ModifyFiles.WriteLog("Error Parsing to short: " + temp);
+                        continue;
+                    }else if(temp[1] != ':'){
+                        ModifyFiles.WriteLog("Error Parsing no (':') in: " + temp);
+                        continue;
+                    }
+                    char c = temp[0];
+                    Data_Path data = new(c,temp[2..]);
                     input.Add(data);
                 }
                 sr.Close();
+                fs.Close();
             }
-            catch{
-                throw;
+            catch(Exception e){
+                ModifyFiles.WriteLog(e.ToString());
             }
-            return input.ToArray();
+            return input;
         }
         private static string GetTime(){
             return DateTime.Now.ToString() + " : ";
