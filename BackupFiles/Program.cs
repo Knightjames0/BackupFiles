@@ -16,8 +16,17 @@ namespace BackUp{
                 
                 if(args.command == "add"){
                     data.Add(args.arguments);
+                }else if(args.command == "backup"){
+                    // TODO create new files from existing
+                }else if(args.command == "list"){
+                    data.ListFiles();
+                }else{
+                    Console.WriteLine("Invalid Command: " + args.command);
                 }
             }
+            ModifyFiles.WriteLog("Session Closed");
+            Console.WriteLine("Closing File Backup System");
+            Thread.Sleep(100);
         }
     }
 }

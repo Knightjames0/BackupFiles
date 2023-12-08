@@ -18,7 +18,16 @@ namespace BackUp{
             });
             return result;
         }
+        public void ListFiles(){
+            Parallel.ForEach(fileList, data => {
+                Console.WriteLine(data.path); // Just print file or dirctory path names for user
+            });
+        }
         public void Add(string[] arguments){ //Check if file or directory exists
+            if(arguments is null){ // Check if their are arguments passed in
+                Console.WriteLine("Error no arguments passed in.");
+                return;
+            }
             foreach(string arg in arguments){
                 char type;
                 if(File.Exists(arg)){

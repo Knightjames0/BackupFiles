@@ -34,8 +34,7 @@ namespace Util
             int index = s.IndexOf(' ');
             if (index == -1)
             {
-                index = s.Length - 1;
-                args.command = s[0..index];
+                args.command = s[0..];
                 return args;
             }
             args.command = s[0..index];
