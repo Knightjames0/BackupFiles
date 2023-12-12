@@ -4,27 +4,27 @@ namespace BackUp{
     public class Program{
         public static void Main(){
             string input = "";
-            ModifyFiles.CreateLog();
-            ModifyFiles.CreateDataFile();
-            ModifyFiles.WriteLog("New Session Started");
+            Logs.CreateLog();
+            DataFilePaths.CreateDataFile();
+            Logs.WriteLog("New Session Started");
             Data data = new();
 
             while(input != "exit"){
                 Console.Write(">");
                 input = (Console.ReadLine() + "").Trim();
-                Args args = Utils.ParseArgs(input);
+                Args args = new(input);
                 
                 if(args.command == "add"){
-                    data.Add(args.arguments);
+                    data.Add(args);
                 }else if(args.command == "backup"){
-                    // TODO create new files from existing
+                    data.CreateBackUp(args);
                 }else if(args.command == "list"){
                     data.ListFiles();
                 }else{
                     Console.WriteLine("Invalid Command: " + args.command);
                 }
             }
-            ModifyFiles.WriteLog("Session Closed");
+            Logs.WriteLog("Session Closed");
             Console.WriteLine("Closing File Backup System");
             Thread.Sleep(100);
         }
