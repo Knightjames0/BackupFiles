@@ -1,43 +1,59 @@
 namespace Util
 {
-    public struct Data_Path
+    public struct DataPath
     {
-        public char type;
-        public string path;
+        private readonly char type;
+        private readonly char drive;
+        private readonly string path;
+        private static int numberOf = 1;
 
         public override readonly string ToString()
         {
-            return "" + type + ':' + path;
+            return "" + type + ':' + drive + ':' + path;
         }
-        public Data_Path(char c, string path)
+        public readonly string GetFullPath(){
+            return  "" + drive + ':' + path;
+        }
+        public DataPath(char c, string fullPath)
         {
             type = c;
-            this.path = path;
+            drive = fullPath[0];
+            path = fullPath[2..];
+            numberOf++;
+        }
+        public static bool operator == (DataPath a, DataPath b){
+            return a.GetFullPath() == b.GetFullPath();
+        }
+        public static bool operator != (DataPath a, DataPath b){
+            return a.GetFullPath() != b.GetFullPath();
+        }
+        public override readonly bool Equals(object? obj){
+            return obj is not null && obj.Equals(this);
+        }
+        public override readonly int GetHashCode(){
+            return numberOf * 7;
         }
     }
-    public struct Args
+    public readonly struct Args
     {
-        public string command;
-        public string[] arguments;
-    }
-    public class Utils
-    {
-        public static Args ParseArgs(string s)
+        public readonly string command;
+        public readonly string? options;
+        public readonly string[]? arguments;
+        public Args (string s)
         {
-            Args args = new();
             if (s.Length < 1)
             {
-                Console.WriteLine("No command found");
-                return args;
+                command = "";
+                return;
             }
             // Get Command
             int index = s.IndexOf(' ');
             if (index == -1)
             {
-                args.command = s[0..];
-                return args;
+                command = s[0..];
+                return;
             }
-            args.command = s[0..index];
+            command = s[0..index];
             // Get Arguments
             List<string> tempList = new();
             bool skipSpace = false;
@@ -64,8 +80,14 @@ namespace Util
                 }
             }
             tempList.Add(temp);
-            args.arguments = tempList.ToArray();
-            return args;
+            arguments = tempList.ToArray();
+            return;
+        }
+    }
+    public class Utils
+    {
+        public static string GetTime(){
+            return DateTime.Now.ToString() + " : ";
         }
     }
 }
