@@ -61,10 +61,8 @@ namespace BackUp{
             }
             return input;
         }
-        public static bool CopyFileToBackup(string oldPath, string newPath){
-            
-
-
+        public static bool RemoveData(DataPath dataPath){
+            //TODO remove old or paths that don't exist anymore
             return false;
         }
     }
