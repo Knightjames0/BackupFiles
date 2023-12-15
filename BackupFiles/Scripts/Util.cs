@@ -21,17 +21,8 @@ namespace Util
             path = fullPath[2..];
             numberOf++;
         }
-        public static bool operator == (DataPath a, DataPath b){
+        public static bool Equal(DataPath a, DataPath b){
             return a.GetFullPath() == b.GetFullPath();
-        }
-        public static bool operator != (DataPath a, DataPath b){
-            return a.GetFullPath() != b.GetFullPath();
-        }
-        public override readonly bool Equals(object? obj){
-            return obj is not null && obj.Equals(this);
-        }
-        public override readonly int GetHashCode(){
-            return numberOf * 7;
         }
     }
     public readonly struct Args
@@ -53,7 +44,7 @@ namespace Util
                 command = s[0..];
                 return;
             }
-            command = s[0..index];
+            command = s[0..index];       
             // Get Arguments
             List<string> tempList = new();
             bool skipSpace = false;
