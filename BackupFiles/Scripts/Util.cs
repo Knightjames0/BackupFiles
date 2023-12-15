@@ -5,6 +5,7 @@ namespace Util
         private readonly char type;
         private readonly char drive;
         private readonly string path;
+        private readonly ulong fileSize;
         private static int numberOf = 1;
 
         public override readonly string ToString()
@@ -14,8 +15,15 @@ namespace Util
         public readonly string GetFullPath(){
             return  "" + drive + ':' + path;
         }
+        public readonly char GetPathType(){
+            return type;
+        }
+        public readonly ulong GetSize(){
+            return fileSize;
+        }
         public DataPath(char c, string fullPath)
         {
+            //add file size
             type = c;
             drive = fullPath[0];
             path = fullPath[2..];
@@ -44,7 +52,7 @@ namespace Util
                 command = s[0..];
                 return;
             }
-            command = s[0..index];       
+            command = s[0..index];
             // Get Arguments
             List<string> tempList = new();
             bool skipSpace = false;

@@ -8,7 +8,24 @@ namespace BackUp{
             ListFiles();
         }
         public void UpdateList(){
-            fileList = DataFilePaths.ReadData();
+
+            fileList = new(); //check all are valid file paths or directories
+            foreach(DataPath dataPath in DataFilePaths.ReadData()){
+                char c = dataPath.GetPathType();
+                if(c == '-'){
+                    if(File.Exists(dataPath.GetFullPath())){
+                        fileList.Add(dataPath);
+                        continue;
+                    }
+                    Logs.WriteLog("Warning: File doesn't exist " + dataPath.ToString());
+                }else if(c == 'd'){
+                    if(Directory.Exists(dataPath.GetFullPath())){
+                        fileList.Add(dataPath);
+                        continue;
+                    }
+                    Logs.WriteLog("Warning: Directory doesn't exist " + dataPath.ToString());
+                }
+            }
         }
         private bool HasPath(DataPath data_Path){ // Check if has path already
             bool result = false;
@@ -83,7 +100,7 @@ namespace BackUp{
             //CopyFile(folderPath,fileList[0].GetFullPath());
         }
         public static bool CopyFile(string folderPath, string filePath){
-            string temp = filePath[0] + "\\" + filePath[2..]; // work around for drive letters
+            string temp = filePath[0] + filePath[2..]; // work around for drive letters
             if(!File.Exists(filePath)){
                 Console.WriteLine("fail1");
                 return false;
