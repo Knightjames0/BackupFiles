@@ -1,4 +1,5 @@
-﻿using Util;
+﻿using System.Diagnostics;
+using Util;
 
 namespace BackUp{
     public class Program{
@@ -7,8 +8,11 @@ namespace BackUp{
             Logs.CreateLog();
             DataFilePaths.CreateDataFile();
             Logs.WriteLog("New Session Started");
+            Stopwatch sw = new();
+            sw.Start();
             Data data = new();
-
+            sw.Stop();
+            Console.WriteLine(sw.Elapsed);
             while(input != "exit"){
                 Console.Write(">");
                 input = (Console.ReadLine() + "").Trim();
