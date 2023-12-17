@@ -4,11 +4,30 @@ namespace BackUp{
     public class Data{
         private List<DataPath> fileList;
         public Data(){
-            fileList = DataFilePaths.ReadData();
+            fileList = new();
+            UpdateList();
             ListFiles();
         }
         public void UpdateList(){
-            fileList = DataFilePaths.ReadData();
+            fileList = new(); //check all are valid file paths or directories
+            foreach(DataPath dataPath in DataFilePaths.ReadData()){
+                char c = dataPath.GetFileType();
+                if(c == '-'){
+                    if(File.Exists(dataPath.GetFullPath())){
+                        dataPath.UpdateSize(); //update files size
+                        fileList.Add(dataPath);
+                        continue;
+                    }
+                    Logs.WriteLog("Warning: File doesn't exist " + dataPath.ToString());
+                }else if(c == 'd'){
+                    if(Directory.Exists(dataPath.GetFullPath())){
+                        dataPath.UpdateSize(); //update files size
+                        fileList.Add(dataPath);
+                        continue;
+                    }
+                    Logs.WriteLog("Warning: Directory doesn't exist " + dataPath.ToString());
+                }
+            }
         }
         private bool HasPath(DataPath data_Path){ // Check if has path already
             bool result = false;
@@ -21,7 +40,7 @@ namespace BackUp{
         }
         public void ListFiles(){
             Parallel.ForEach(fileList, data => {
-                Console.WriteLine(data.GetFullPath()); // Just print file or dirctory path names for user
+                Console.WriteLine("{0,-80} {1:N0} bytes",data.GetFullPath(),data.GetFileSize()); // Just print file or dirctory path names for user
             });
             Console.WriteLine("Done");
         }
@@ -55,7 +74,7 @@ namespace BackUp{
                 }
             }
         }
-        public void CreateBackUp(Args args){
+        public void NewBackup(Args args){
             if(args.arguments is null){ // Check if their are arguments passed in
                 Console.WriteLine("Error no arguments passed in.");
                 return;
@@ -74,16 +93,47 @@ namespace BackUp{
                 thread.Join();
                 return;
             }
-            Directory.CreateDirectory(folderPath);
             thread.Join();
+            long backupSize = GetBackupSizeEstimate();
+            Console.WriteLine("The file size to be backed up is: {0:N2} Kilobytes would you like to continue? (y/n)", backupSize / 1000f);
+            char user = (Console.ReadLine() + "n").ToLower()[0];
+            if(user != 'y'){
+                Console.WriteLine("User cancelled backup!");
+                return;
+            }
+            Directory.CreateDirectory(folderPath);
             Console.WriteLine("Created at: " + folderPath);
+            
             foreach(DataPath dataPath in fileList){
-                CreateDirectoryTree(folderPath,dataPath);
+
+                if(!CreateBackup.CreateDirectoryTreeDown(folderPath,dataPath)){
+                    Console.WriteLine("Error: with " + dataPath);
+                    continue;
+                }
+                if(dataPath.GetFileType() == 'd'){
+                    CreateDirectoryTreeUp(folderPath);
+                }
             }
             //CopyFile(folderPath,fileList[0].GetFullPath());
         }
+        private long GetBackupSizeEstimate(){
+            long size = 0;
+            Parallel.ForEach<DataPath,long>(fileList, 
+                    () => 0,
+                    (file, loop, incr) =>{
+                        incr += file.GetFileSize();
+                        return incr;
+                },
+                incr => Interlocked.Add(ref size, incr));
+            return size;
+        }
+        private void CreateDirectoryTreeUp(string folderPath)
+        {
+            
+        }
+
         public static bool CopyFile(string folderPath, string filePath){
-            string temp = filePath[0] + "\\" + filePath[2..]; // work around for drive letters
+            string temp = filePath[0] + filePath[2..]; // work around for drive letters
             if(!File.Exists(filePath)){
                 Console.WriteLine("fail1");
                 return false;
@@ -100,42 +150,6 @@ namespace BackUp{
                 throw;
             }
             return true;
-        }
-        public static bool CreateDirectoryTree(string folderPath, DataPath dp){
-            string temp = dp.GetFullPath()[0] + dp.GetFullPath()[2..]; // work around for drive letters turn into folders
-            if(!Directory.Exists(folderPath + dp.GetFullPath())){
-                int t = temp.LastIndexOf('\\',temp.Length - 2) + 1;
-                if(CreateDirectoryTreePart(folderPath, temp[0..t])){
-                    return CreateDir(folderPath + temp);
-                }
-            }
-
-            return true;
-        }
-        private static bool CreateDirectoryTreePart(string folderPath, string path){ //should not be called out side of CreateDirectoryTree
-            int t = path.LastIndexOf('\\',path.Length - 2);
-            if(!Directory.Exists(folderPath + path)){
-                if(t == -1){
-                    return CreateDir(folderPath + path); 
-                }
-                if(t > 0){
-                    if(CreateDirectoryTreePart(folderPath, path[0..(t+1)])){
-                        return CreateDir(folderPath + path); 
-                    }
-                }
-            }else{
-                return true;
-            }
-            return false;
-        }
-        private static bool CreateDir(string path){
-            try{
-                Directory.CreateDirectory(path);
-                return true;
-            }catch{
-                Logs.WriteLog("Error: error creating directory: " + path);
-                return false;
-            }
         }
     }
 }

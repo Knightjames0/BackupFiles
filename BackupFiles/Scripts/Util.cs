@@ -2,24 +2,45 @@ namespace Util
 {
     public struct DataPath
     {
-        private readonly char type;
+        private readonly char fileType;
         private readonly char drive;
         private readonly string path;
+        private long fileSize = 0;
         private static int numberOf = 1;
 
-        public override readonly string ToString()
+        public override string ToString()
         {
-            return "" + type + ':' + drive + ':' + path;
+            return "" + fileType + ':' + drive + ':' + path;
         }
         public readonly string GetFullPath(){
             return  "" + drive + ':' + path;
         }
+        public readonly char GetFileType(){
+            return fileType;
+        }
+        public readonly long GetFileSize(){
+            return fileSize;
+        }
+        public void UpdateSize(){
+            try{
+                if(fileType == 'd'){
+                    DirectoryInfo directoryInfo = new(GetFullPath());
+                    fileSize = Utils.GetDirectorySize(directoryInfo);
+                }else if(fileType == '-'){
+                    FileInfo fileInfo = new(GetFullPath());
+                    fileSize = fileInfo.Length;
+                }
+            }catch{
+                BackUp.Logs.WriteLog("Error: can't reach file path " + ToString());
+            }
+        }
         public DataPath(char c, string fullPath)
         {
-            type = c;
+            fileType = c;
             drive = fullPath[0];
             path = fullPath[2..];
             numberOf++;
+            UpdateSize();
         }
         public static bool Equal(DataPath a, DataPath b){
             return a.GetFullPath() == b.GetFullPath();
@@ -44,7 +65,7 @@ namespace Util
                 command = s[0..];
                 return;
             }
-            command = s[0..index];       
+            command = s[0..index];
             // Get Arguments
             List<string> tempList = new();
             bool skipSpace = false;
@@ -77,6 +98,27 @@ namespace Util
     }
     public class Utils
     {
+        public static long GetDirectorySize(DirectoryInfo directory){
+            long size = 0;
+            try{
+                FileInfo[] fileInfos = directory.GetFiles();
+                foreach (FileInfo file in fileInfos){
+                    size += file.Length;
+                }
+                DirectoryInfo[] directories = directory.GetDirectories();
+                Parallel.ForEach<DirectoryInfo,long>(directories, 
+                    () => 0,
+                    (i, loop, incr) =>{
+                        incr += GetDirectorySize(i);
+                        return incr;
+                },
+                incr => Interlocked.Add(ref size, incr));
+            }catch (UnauthorizedAccessException e){
+                Console.WriteLine("Error: Calculating folder size with: \n" + e.Message);
+            }
+            return size;
+            
+        }
         public static string GetTime(){
             return DateTime.Now.ToString() + " : ";
         }
