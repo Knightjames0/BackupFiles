@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Util;
+﻿using Util;
 
 namespace BackUp{
     public class Program{
@@ -9,6 +8,7 @@ namespace BackUp{
             DataFilePaths.CreateDataFile();
             Logs.WriteLog("New Session Started");
             Data data = new();
+
             while(input != "exit"){
                 Console.Write(">");
                 input = (Console.ReadLine() + "").Trim();
@@ -17,7 +17,7 @@ namespace BackUp{
                 if(args.command == "add"){
                     data.Add(args);
                 }else if(args.command == "backup"){
-                    data.CreateBackUp(args);
+                    data.NewBackup(args);
                 }else if(args.command == "list"){
                     data.ListFiles();
                 }else{

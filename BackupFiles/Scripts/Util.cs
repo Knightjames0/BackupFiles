@@ -1,5 +1,3 @@
-using BackUp;
-
 namespace Util
 {
     public struct DataPath
@@ -33,7 +31,7 @@ namespace Util
                     fileSize = fileInfo.Length;
                 }
             }catch{
-                Logs.WriteLog("Error: can't reach file path " + ToString());
+                BackUp.Logs.WriteLog("Error: can't reach file path " + ToString());
             }
         }
         public DataPath(char c, string fullPath)
