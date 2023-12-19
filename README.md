@@ -1,6 +1,5 @@
 # BackupFiles V1.0
 
-How to operate
 
 Commands
 
