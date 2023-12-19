@@ -1,16 +1,12 @@
 # BackupFiles V1.0
 
 
-Commands
+List of Commands
 
-add - add file paths or directory paths
-add [file...] - for file paths with spaces inclose with ("").
+add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with (\"\").
 
 list - provides a list paths added
 
-backup - creates one of all the files add at a inputed location
-backup [file] - must have a destination file path
+Backup [file] - Creates one of all the files add at a inputed location and must have a destination file path.
 
-help - help info
-
-version - provides current version
+version - Display Version.
