@@ -3,6 +3,7 @@
 How to operate
 
 Commands
+
 add - add file paths or directory paths
 add [file...] - for file paths with spaces inclose with ("").
 
