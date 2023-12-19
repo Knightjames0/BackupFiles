@@ -6,7 +6,6 @@ namespace Util
         private readonly char drive;
         private readonly string path;
         private long fileSize = 0;
-        private static int numberOf = 1;
 
         public override string ToString()
         {
@@ -39,7 +38,6 @@ namespace Util
             fileType = c;
             drive = fullPath[0];
             path = fullPath[2..];
-            numberOf++;
             UpdateSize();
         }
         public static bool Equal(DataPath a, DataPath b){

@@ -20,7 +20,7 @@ namespace BackUp{
             try{
                 using FileStream fs = new(dataFilePath, FileMode.Append, FileAccess.Write);
                 using StreamWriter sw = new(fs);;
-                sw.WriteLine(data_Paths.ToString());
+                sw.WriteLine(data_Paths);
                 sw.Close();
                 fs.Close();
             }
