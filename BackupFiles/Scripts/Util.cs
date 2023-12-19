@@ -122,5 +122,15 @@ namespace Util
         public static string GetTime(){
             return DateTime.Now.ToString() + " : ";
         }
+        public static string GetDate(){
+            string temp = DateTime.Now.ToShortDateString();
+            //int t = temp.IndexOf(' ');
+            string[] arr = temp[0..].Split('/');
+            temp = "";
+            for(int i = 0; i < arr.Length; i++){
+                temp += arr[i] + '_';
+            }
+            return temp;
+        }
     }
 }
