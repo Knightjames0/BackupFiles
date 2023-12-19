@@ -1,4 +1,3 @@
-using System.Text;
 using Util;
 
 namespace BackUp{
@@ -8,15 +7,15 @@ namespace BackUp{
             if(!File.Exists(logPath)){
                 try{
                     using FileStream fs = File.Create(logPath);
-                    char[] chars = (Utils.GetTime() + "Beginning of Logging\n").ToCharArray();
-                    fs.Write(Encoding.UTF8.GetBytes(chars), 0, chars.Length);
+                    using StreamWriter sw = new(fs);
+                    sw.WriteLine(Utils.GetTime() + "Beginning of logging");
+                    sw.Close();
                     fs.Close();
                 } catch(Exception e){
                     Console.WriteLine("Error Creating log file: " + logPath + "\n" + e);
                 }
             }
-        }
-        public static void WriteLog(string s){ // Write to Log.log file
+        }        public static void WriteLog(string s){ // Write to Log.log file
             if(!File.Exists(logPath)){
                 CreateLog();
             }

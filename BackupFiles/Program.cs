@@ -23,7 +23,7 @@ namespace BackUp{
                 }else if(args.command == "help"){
                     Data.HelpInfo();
                 }else if(args.command == "version"){
-                    Console.WriteLine("BackupFiles version 1.00");
+                    Console.WriteLine("BackupFiles version 1.0.1");
                 }else if(args.command == "exit"){
                     //it will now close
                 }else{

@@ -17,14 +17,14 @@ namespace BackUp{
                         fileList.Add(dataPath);
                         continue;
                     }
-                    Logs.WriteLog("Warning: File doesn't exist " + dataPath.ToString());
+                    Logs.WriteLog("Warning: File doesn't exist " + dataPath);
                 }else if(c == 'd'){
                     if(Directory.Exists(dataPath.GetFullPath())){
                         if(updateSizes){dataPath.UpdateSize();} //update files size
                         fileList.Add(dataPath);
                         continue;
                     }
-                    Logs.WriteLog("Warning: Directory doesn't exist " + dataPath.ToString());
+                    Logs.WriteLog("Warning: Directory doesn't exist " + dataPath);
                 }
             }
         }
@@ -49,20 +49,24 @@ namespace BackUp{
                 Console.WriteLine("Error: no arguments passed in.");
                 return;
             }
-            foreach(string arg in args.arguments){
-                char type;
-                string temp = arg;
-                if(File.Exists(arg)){
-                    type = '-';
-                }else if(Directory.Exists(arg)){
-                    type = 'd';
-                }else{
-                    Console.WriteLine("Error: path dosen't exist or can't be reached: " + arg);
-                    Logs.WriteLog("Error: path dosen't exist or can't be reached: " + arg);
+            foreach(string path in args.arguments){
+                if(path.Length > 255){
+                    Console.WriteLine("Error: Too long of file name: " + path);
                     continue;
                 }
-                if(arg[^1] != '\\' && type == 'd'){
+                char type;
+                string temp = path;
+                if(File.Exists(path)){
+                    type = '-';
+                }else if(Directory.Exists(path)){
+                    type = 'd';
+                    if(path[^1] != '\\'){
                     temp += '\\';
+                }
+                }else{
+                    Console.WriteLine("Error: path dosen't exist or can't be reached: " + path);
+                    Logs.WriteLog("Error: path dosen't exist or can't be reached: " + path);
+                    continue;
                 }
                 DataPath data = new(type,temp);
                 if(!HasPath(data)){ //check if already exists in listData
@@ -70,7 +74,7 @@ namespace BackUp{
                         fileList.Add(data);
                     }
                 }else{
-                    Console.WriteLine("Error: already in list of files: " + arg);
+                    Console.WriteLine("Error: already in list of files: " + path);
                 }
             }
         }
@@ -79,8 +83,6 @@ namespace BackUp{
                 Console.WriteLine("Error: no arguments passed in.");
                 return;
             }
-            Thread thread = new(() => UpdateList(true));
-            thread.Start();
             string folderPath = args.arguments[0]; //creates folder name
             if(folderPath[^1] != '\\'){
                 folderPath += '\\';
@@ -90,10 +92,9 @@ namespace BackUp{
             folderPath += "Backup\\";
             if(Directory.Exists(folderPath)){
                 Console.WriteLine("Error path already exists: " + folderPath);
-                thread.Join();
                 return;
             }
-            thread.Join();
+            UpdateList(true);
             long backupSize = GetBackupSizeEstimate(); //grabs each size not accounting for if something is contained within
             Console.Write("The file size to be backed up is: {0:N3} Megabytes would you like to continue? (y/n) ", backupSize / 1_000_000f);
             char user = (Console.ReadLine() + "n").ToLower()[0];
@@ -123,11 +124,12 @@ namespace BackUp{
             Console.WriteLine("Created at: " + folderPath);
         }
         public static void HelpInfo(){
-            string[] helpFile = new string[4]{
-                "Help info\n",
-                "add - add file paths or directory paths. \nadd [file...] - for file paths with spaces inclose with (\"\").\n",
+            string[] helpFile = new string[5]{
+                "List of Commands\n\n",
+                "add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with (\"\").\n",
                 "list - provides a list paths added\n",
-                "backup - creates one of all the files add at a inputed location. \nbackup [file] - must have a destination file path.\n",
+                "backup [file] - Creates one of all the files add at a inputed location and must have a destination file path.\n",
+                "version - Display Version.\n",
             };
             for(int i = 0; i < helpFile.Length; i++){
                 Console.Write(helpFile[i]);
