@@ -20,13 +20,18 @@ namespace BackUp{
                     data.NewBackup(args);
                 }else if(args.command == "list"){
                     data.ListFiles();
+                }else if(args.command == "help"){
+                    Data.HelpInfo();
+                }else if(args.command == "version"){
+                    Console.WriteLine("BackupFiles version 1.00");
+                }else if(args.command == "exit"){
+                    //it will now close
                 }else{
-                    Console.WriteLine("Invalid Command: " + args.command);
+                    Console.WriteLine("Invalid Command: " + args.command + "\nTry help for a list of commands");
                 }
             }
             Logs.WriteLog("Session Closed");
             Console.WriteLine("Closing File Backup System");
-            Thread.Sleep(100);
         }
     }
 }
