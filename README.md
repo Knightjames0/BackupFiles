@@ -10,3 +10,7 @@ list - provides a list paths added
 
 backup - creates one of all the files add at a inputed location
 backup [file] - must have a destination file path
+
+help - help info
+
+version - provides current version
