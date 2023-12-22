@@ -42,7 +42,7 @@ namespace BackUp{
                 using StreamReader sr = new(fs);
                 string? temp;
                 while((temp = sr.ReadLine()) is not null){
-                    if(temp.Length < 3){
+                    if(temp.Length < 4){
                         Logs.WriteLog("Error Parsing to short: " + temp);
                         continue;
                     }else if(temp[1] != ':'){
@@ -61,8 +61,47 @@ namespace BackUp{
             }
             return input;
         }
-        public static bool RemoveData(DataPath dataPath){
-            //TODO remove old or paths that don't exist anymore
+        public static bool RemoveData(string[] paths){
+            string tempFile = Path.GetTempFileName();
+            bool[] isFound = new bool[paths.Length];
+            try{
+                List<string> workingLines = new();
+                using StreamReader sr = new(dataFilePath);
+                string? temp;
+                while((temp = sr.ReadLine()) is not null){
+                    if(temp.Length < 4){ // check for errors in data file and remove them
+                        continue;
+                    }else if(temp[1] != ':'){
+                        continue;
+                    }
+                    if(!ExistsInData(isFound,paths,temp)){
+                        workingLines.Add(temp); // add back to temp file if passes all checks
+                    }
+                }
+                sr.Close();
+                File.WriteAllLines(tempFile,workingLines);
+
+                for(int i = 0; i < paths.Length; i++){ // Write Out path that where not found
+                    if(!isFound[i]){
+                         Console.WriteLine("Error: path is not in list already: " + paths[i]);
+                    }
+                }
+
+                File.Move(tempFile,dataFilePath,true);
+                File.Delete(tempFile);
+            }catch(Exception e){
+                Logs.WriteLog(e.ToString());
+                return false;
+            }
+            return true;
+        }
+        private static bool ExistsInData(bool[] isFound, string[] paths, string temp){
+            for(int i = 0; i < paths.Length; i++){ //checks if path equals line in data file
+                if(temp[2..] == paths[i] || temp[2..] == paths[i] + "\\"){
+                    isFound[i] = true;
+                    return true;  
+                }
+            }
             return false;
         }
     }

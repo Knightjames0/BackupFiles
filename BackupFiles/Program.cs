@@ -16,6 +16,8 @@ namespace BackUp{
                 
                 if(args.command == "add"){
                     data.Add(args);
+                }else if(args.command == "remove"){
+                    data.Remove(args);
                 }else if(args.command == "backup"){
                     data.NewBackup(args);
                 }else if(args.command == "list"){
@@ -23,7 +25,7 @@ namespace BackUp{
                 }else if(args.command == "help"){
                     Data.HelpInfo();
                 }else if(args.command == "version"){
-                    Console.WriteLine("BackupFiles version 1.0.1");
+                    Console.WriteLine("BackupFiles version 1.0.2");
                 }else if(args.command == "exit"){
                     //it will now close
                 }else{
