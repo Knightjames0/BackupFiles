@@ -95,7 +95,7 @@ namespace BackUp{
             }
             return true;
         }
-        public static bool ExistsInData(bool[] isFound, string[] paths, string temp){
+        private static bool ExistsInData(bool[] isFound, string[] paths, string temp){
             for(int i = 0; i < paths.Length; i++){ //checks if path equals line in data file
                 if(temp[2..] == paths[i] || temp[2..] == paths[i] + "\\"){
                     isFound[i] = true;
