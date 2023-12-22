@@ -16,6 +16,8 @@ namespace BackUp{
                 
                 if(args.command == "add"){
                     data.Add(args);
+                }else if(args.command == "remove"){
+                    data.Remove(args);
                 }else if(args.command == "backup"){
                     data.NewBackup(args);
                 }else if(args.command == "list"){

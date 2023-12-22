@@ -78,6 +78,22 @@ namespace BackUp{
                 }
             }
         }
+        public void Remove(Args args){
+            if(args.arguments is null){ // Check if their are arguments passed in
+                Console.WriteLine("Error: no arguments passed in.");
+                return;
+            }
+            foreach(string path in args.arguments){
+                if(path.Length > 256){
+                    Console.WriteLine("Error: Too long of file name: " + path);
+                    return;
+                }
+            }
+            if(!DataFilePaths.RemoveData(args.arguments)){
+                Console.WriteLine("Error: removing paths from list");
+            }
+            UpdateList(false);
+        }
         public void NewBackup(Args args){
             if(args.arguments is null){ // Check if their are arguments passed in
                 Console.WriteLine("Error: no arguments passed in.");
@@ -124,9 +140,10 @@ namespace BackUp{
             Console.WriteLine("Created at: " + folderPath);
         }
         public static void HelpInfo(){
-            string[] helpFile = new string[5]{
+            string[] helpFile = new string[6]{
                 "List of Commands\n\n",
                 "add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with (\"\").\n",
+                "remove [file...] - remove file paths or directory paths from backup. For file paths with spaces inclose with (\"\").\n",
                 "list - provides a list paths added\n",
                 "backup [file] - Creates one of all the files add at a inputed location and must have a destination file path.\n",
                 "version - Display Version.\n",
