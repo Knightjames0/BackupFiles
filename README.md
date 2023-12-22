@@ -3,7 +3,9 @@
 
 List of Commands
 
-add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with (\"\").
+add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with ("").
+
+remove [file...] - remove file paths or directory paths from backup. For file paths with spaces inclose with ("").
 
 list - provides a list paths added
 
