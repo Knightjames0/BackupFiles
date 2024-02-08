@@ -1,6 +1,5 @@
-using Util;
 
-namespace BackUp{
+namespace Util{
     public class Logs{
         private const string logPath = @".\Log.log";
         public static void CreateLog(){ //Create Log.log file

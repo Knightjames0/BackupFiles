@@ -30,7 +30,7 @@ namespace Util
                     fileSize = fileInfo.Length;
                 }
             }catch{
-                BackUp.Logs.WriteLog("Error: can't reach file path " + ToString());
+                Logs.WriteLog("Error: can't reach file path " + ToString());
             }
         }
         public DataPath(char c, string fullPath)
@@ -48,7 +48,7 @@ namespace Util
     {
         public readonly string command;
         public readonly string? options;
-        public readonly string[]? arguments;
+        public readonly List<string>? arguments;
         public Args (string s)
         {
             if (s.Length < 1)
@@ -65,7 +65,7 @@ namespace Util
             }
             command = s[0..index];
             // Get Arguments
-            List<string> tempList = new();
+            arguments = new();
             bool skipSpace = false;
             string temp = "";
             for (int i = index; i < s.Length; i++)
@@ -79,7 +79,7 @@ namespace Util
                 {
                     if (temp != "")
                     {
-                        tempList.Add(temp);
+                        arguments.Add(temp);
                         temp = "";
                     }
                     continue;
@@ -89,13 +89,26 @@ namespace Util
                     temp += c;
                 }
             }
-            tempList.Add(temp);
-            arguments = tempList.ToArray();
+            arguments.Add(temp);
             return;
+        }
+        public bool RemoveArgumentAt(int index){
+            if(arguments == null){
+                return false;
+            }
+            if(arguments.Count > index){
+                arguments.RemoveAt(index);
+                return true;
+            }
+            return false;
         }
     }
     public class Utils
     {
+        public static void PrintAndLog(string msg){
+            Console.WriteLine(msg);
+            Logs.WriteLog(msg);
+        }
         public static long GetDirectorySize(DirectoryInfo directory){
             long size = 0;
             try{
@@ -104,6 +117,9 @@ namespace Util
                     size += file.Length;
                 }
                 DirectoryInfo[] directories = directory.GetDirectories();
+                if(directories.Length == 0){
+                    return size;
+                }
                 Parallel.ForEach<DirectoryInfo,long>(directories, 
                     () => 0,
                     (i, loop, incr) =>{
@@ -126,7 +142,7 @@ namespace Util
             string[] arr = temp[0..].Split('/');
             temp = "";
             for(int i = 0; i < arr.Length; i++){
-                temp += arr[i] + '_';
+                temp += '_' + arr[i];
             }
             return temp;
         }
