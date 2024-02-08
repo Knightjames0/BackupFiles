@@ -5,7 +5,7 @@ namespace BackUp_V2{
         public static void Main(){
             string input = "";
             Logs.CreateLog();
-            NewDataFilePaths.CreateDataFile();
+            DataFilePaths.CreateDataFile();
             Logs.WriteLog("New Session Started");
             Data data = new();
 

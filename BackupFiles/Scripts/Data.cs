@@ -35,7 +35,7 @@ namespace BackUp_V2{
                     Utils.PrintAndLog("Error: already in list of files: " + path);
                     continue;
                 }
-                if(NewDataFilePaths.WriteData(data)){
+                if(DataFilePaths.WriteData(data)){
                     fileList.Add(data);
                 }
             }
@@ -91,13 +91,13 @@ namespace BackUp_V2{
             {
                 dataPaths[i] = new DataPath(args.arguments.ElementAt(i));
             }
-            if(!NewDataFilePaths.RemoveData(dataPaths)){
+            if(!DataFilePaths.RemoveData(dataPaths)){
                 Console.WriteLine("Error: removing paths from list");
             }
             UpdateList();
         }
         private void UpdateList(){
-            fileList = NewDataFilePaths.ReadData();
+            fileList = DataFilePaths.ReadData();
         }
         public void BackupCommand(Args args){
             if(args.arguments is null){ // Check if their are arguments passed in
@@ -120,7 +120,7 @@ namespace BackUp_V2{
             //add later
             
             List<string> oldBackups = new();
-            NewBackup.Backup(fileList,oldBackups,folderPath);
+            Backup.BackupCreate(fileList,oldBackups,folderPath);
         }
     }
 }

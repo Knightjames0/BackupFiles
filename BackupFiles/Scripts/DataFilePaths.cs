@@ -1,7 +1,7 @@
 using Util;
 
 namespace BackUp_V2{
-    public class NewDataFilePaths{
+    public class DataFilePaths{
         private const string dataFilePath = @".\Data";
         public static void CreateDataFile(){ //Create Data file
             if(!File.Exists(dataFilePath)){

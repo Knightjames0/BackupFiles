@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Util;
 
 namespace BackUp_V2{
-    public class NewBackup{
-        public static void Backup(List<DataPath> dataPaths, List<string> oldBackups, string location){
+    public class Backup{
+        public static void BackupCreate(List<DataPath> dataPaths, List<string> oldBackups, string location){
             if(dataPaths.Count == 0){
                 Console.WriteLine("No files to backup added");
             }
