@@ -1,6 +1,6 @@
 ﻿using Util;
 
-namespace BackUp_V2{
+namespace BackUp{
     public class Program{
         public static void Main(){
             string input = "";
@@ -33,8 +33,10 @@ namespace BackUp_V2{
                     Console.WriteLine("BackupFiles version 1.1.0");
                 }else if(args.command == "exit"){
                     //it will now close
+                }else if(args.command == ""){
+                    //handled in Args Constructer
                 }else{
-                    Console.WriteLine("Invalid Command: " + args.command + "\nTry help for a list of commands");
+                    Utils.PrintAndLog("Invalid Command: " + args.command + "\nTry help for a list of commands");
                 }
             }
             Logs.WriteLog("Session Closed");

@@ -1,6 +1,6 @@
 using Util;
 
-namespace BackUp_V2{
+namespace BackUp{
     public class DataFilePaths{
         private const string dataFilePath = @".\Data";
         public static void CreateDataFile(){ //Create Data file
@@ -25,7 +25,7 @@ namespace BackUp_V2{
                 fs.Close();
             }
             catch(Exception e){
-                Console.WriteLine("Error occured adding: " + data_Paths.GetFullPath());
+                Console.WriteLine("Error: occured adding: " + data_Paths.GetFullPath());
                 Logs.WriteLog(e + " at: " + data_Paths.GetFullPath());
                 return false;
             }

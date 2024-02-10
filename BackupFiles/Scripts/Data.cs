@@ -1,7 +1,8 @@
 using Util;
 
-namespace BackUp_V2{
+namespace BackUp{
     public class Data{
+        public const short MaxFileSize = 320;
         private List<DataPath> fileList;
         public Data(){
             fileList = new();
@@ -12,9 +13,19 @@ namespace BackUp_V2{
                 Console.WriteLine("Error: no arguments passed in.");
                 return;
             }
+            if(args.options is not null){
+                if(args.options.Count > 1){
+                    Console.WriteLine("Error: Invalid options passed in to add.");
+                    return;
+                }
+            }
             foreach(string path in args.arguments){
-                if(path.Length > 255){
+                if(path.Length > MaxFileSize - 1){
                     Utils.PrintAndLog("Error: Too long of file name: " + path);
+                    continue;
+                }
+                if(path.Length < 3){
+                    Utils.PrintAndLog("Error: Too short of file name: " + path);
                     continue;
                 }
                 char fileType;
@@ -63,10 +74,11 @@ namespace BackUp_V2{
         public static void HelpInfo(){
             string[] helpFile = new string[6]{
                 "List of Commands\n\n",
-                "add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with (\"\").\n",
-                "remove [file...] - remove file paths or directory paths from backup. For file paths with spaces inclose with (\"\").\n",
+                "add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with double quotes\".\n",
+                "remove [file...] - remove file paths or directory paths from backup. For file paths with spaces inclose with double quotes \".\n",
                 "list - provides a list paths added\n",
                 "backup [file] - Creates one of all the files add at a inputed location and must have a destination file path.\n",
+                // backup -n [file] [file...] -Creates one of all the files add at a inputed location and copies only ones that don't exist in other backups
                 "version - Display Version.\n",
             };
             for(int i = 0; i < helpFile.Length; i++){
@@ -78,14 +90,26 @@ namespace BackUp_V2{
                 Console.WriteLine("Error: no arguments passed in.");
                 return;
             }
-            for (int i = 0; i < args.arguments.Count; i++){
+            if(args.options is not null){
+                if(args.options.Count > 1){
+                    Console.WriteLine("Error: Invalid options passed in to remove.");
+                    return;
+                }
+            }
+            for (short i = 0; i < args.arguments.Count; i++){
                 string path = args.arguments.ElementAt(i);
-                if(path.Length > 256){
-                    Console.WriteLine("Error: Too long of file name: " + path);
+                if(path.Length > MaxFileSize * 2){
+                    Utils.PrintAndLog("Error: Too long of file name: " + path);
+                    args.RemoveArgumentAt(i);
+                    i--;
+                }
+                else if(path.Length < 3){
+                    Utils.PrintAndLog("Error: Too short of file name: " + path);
                     args.RemoveArgumentAt(i);
                     i--;
                 }
             }
+            
             DataPath[] dataPaths = new DataPath[args.arguments.Count];
             for (int i = 0; i < dataPaths.Length; i++)
             {
@@ -103,6 +127,18 @@ namespace BackUp_V2{
             if(args.arguments is null){ // Check if their are arguments passed in
                 Console.WriteLine("Error: no arguments passed in.");
                 return;
+            }
+            bool checkOldBackups = false;
+            if(args.options is not null){
+                if(args.options.Count == 1){
+                    checkOldBackups = args.options[0] == 'n';
+                }else{
+                    Console.WriteLine("Error: Invalid option");
+                }
+                if(args.options.Count > 1){
+                    Console.WriteLine("Error: Invalid options passed in to backup.");
+                    return;
+                }
             }
             string folderPath = args.arguments[0]; //creates folder name
             if(folderPath[^1] != '\\'){
