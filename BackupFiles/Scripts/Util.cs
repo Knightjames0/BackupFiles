@@ -39,11 +39,11 @@ namespace Util
                             options.Add(inputString[i]);
                         }else{
                             command = "";
-                            Utils.PrintAndLog("Error: Repeating characters for options passed in");
+                            Utils.PrintAndLog("Error: Repeating characters for options passed in: " + inputString);
                             return;
                         }
                     }
-                    index = i;
+                    index = (short)(1 + i);
                 }
             }
             // Get Arguments
