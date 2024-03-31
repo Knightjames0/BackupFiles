@@ -83,7 +83,7 @@ namespace BackUp{
                 return;
             }
             //ask user if size is ok
-            if(!GetUserConfirmation(folderPath, backupSize)){
+            if(!GetUserConfirmation(backupSize)){
                 Console.WriteLine("User didn't continue with backup progress");
                 return; //close if "n" or not enough disk space
             }
@@ -128,7 +128,7 @@ namespace BackUp{
                 return false;
             }
         }
-        private static bool GetUserConfirmation(string location, ulong backupSize){
+        private static bool GetUserConfirmation(ulong backupSize){
             Console.Write("The file size to be backed up is: {0:N3} Megabytes would you like to continue? (y/n) ", backupSize / 1_000_000f);
             string answer = "";
             while(answer != "y" && answer != "n"){
