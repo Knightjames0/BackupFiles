@@ -25,7 +25,7 @@ namespace BackUp{
                 fs.Close();
             }
             catch(Exception e){
-                Console.WriteLine("Error occured adding: " + data_Paths.GetFullPath());
+                Console.WriteLine("Error: occured adding: " + data_Paths.GetFullPath());
                 Logs.WriteLog(e + " at: " + data_Paths.GetFullPath());
                 return false;
             }
@@ -51,7 +51,17 @@ namespace BackUp{
                     }
                     char c = temp[0];
                     DataPath data = new(c,temp[2..]);
-                    input.Add(data);
+                    bool hasAllReady = false;
+                    foreach(DataPath dataPath in input){
+                        if(data.IsEqual(dataPath)){
+                            Logs.WriteLog("Duplicate in data: " + temp);
+                            hasAllReady = true;
+                            break;
+                        }
+                    }
+                    if(!hasAllReady){
+                        input.Add(data);
+                    }
                 }
                 sr.Close();
                 fs.Close();
@@ -61,9 +71,13 @@ namespace BackUp{
             }
             return input;
         }
-        public static bool RemoveData(string[] paths){
+        public static bool RemoveData(DataPath[] dataPaths){
             string tempFile = Path.GetTempFileName();
-            bool[] isFound = new bool[paths.Length];
+            bool[] isFound = new bool[dataPaths.Length];
+            string[] paths = new string[dataPaths.Length];
+            for (int i = 0; i < dataPaths.Length; i++){
+                paths[i] = dataPaths[i].GetFullPath();
+            }
             try{
                 List<string> workingLines = new();
                 using StreamReader sr = new(dataFilePath);
@@ -81,9 +95,9 @@ namespace BackUp{
                 sr.Close();
                 File.WriteAllLines(tempFile,workingLines);
 
-                for(int i = 0; i < paths.Length; i++){ // Write Out path that where not found
+                for(int i = 0; i < dataPaths.Length; i++){ // Write Out path that where not found
                     if(!isFound[i]){
-                         Console.WriteLine("Error: path is not in list already: " + paths[i]);
+                        Console.WriteLine("Error: path is not in list already: " + paths[i]);
                     }
                 }
 

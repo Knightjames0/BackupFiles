@@ -1,76 +1,61 @@
 namespace Util
 {
-    public struct DataPath
-    {
-        private readonly char fileType;
-        private readonly char drive;
-        private readonly string path;
-        private long fileSize = 0;
-
-        public override string ToString()
-        {
-            return "" + fileType + ':' + drive + ':' + path;
-        }
-        public readonly string GetFullPath(){
-            return  "" + drive + ':' + path;
-        }
-        public readonly char GetFileType(){
-            return fileType;
-        }
-        public readonly long GetFileSize(){
-            return fileSize;
-        }
-        public void UpdateSize(){
-            try{
-                if(fileType == 'd'){
-                    DirectoryInfo directoryInfo = new(GetFullPath());
-                    fileSize = Utils.GetDirectorySize(directoryInfo);
-                }else if(fileType == '-'){
-                    FileInfo fileInfo = new(GetFullPath());
-                    fileSize = fileInfo.Length;
-                }
-            }catch{
-                BackUp.Logs.WriteLog("Error: can't reach file path " + ToString());
-            }
-        }
-        public DataPath(char c, string fullPath)
-        {
-            fileType = c;
-            drive = fullPath[0];
-            path = fullPath[2..];
-            UpdateSize();
-        }
-        public static bool Equal(DataPath a, DataPath b){
-            return a.GetFullPath() == b.GetFullPath();
-        }
-    }
     public readonly struct Args
     {
         public readonly string command;
-        public readonly string? options;
-        public readonly string[]? arguments;
-        public Args (string s)
+        public readonly List<char>? options;
+        public readonly List<string>? arguments;
+        public Args (string inputString)
         {
-            if (s.Length < 1)
+            if (inputString.Length < 1)
             {
+                Utils.PrintAndLog("Error: Nothing passed in");
+                command = "";
+                return;
+            }
+            if(inputString.Length > short.MaxValue - 1){
+                Utils.PrintAndLog("Error: Command passed in was too long max: " + (short.MaxValue - 1) + " characters.");
                 command = "";
                 return;
             }
             // Get Command
-            int index = s.IndexOf(' ');
+            short index = (short)inputString.IndexOf(' ');
             if (index == -1)
             {
-                command = s[0..];
+                command = inputString[0..];
                 return;
             }
-            command = s[0..index];
+            command = inputString[0..index];
+            // Get Options
+            if(inputString[index+1] == '-'){
+                options = new();
+                index +=2;
+                for (short i = index; i < inputString.Length; i++){
+                    if(inputString[i] == ' '){
+                        index = i;
+                        break;
+                    }else{
+                        if(!CharExistInList(options, inputString[i])){
+                            options.Add(inputString[i]);
+                        }else{
+                            command = "";
+                            Utils.PrintAndLog("Error: Repeating characters for options passed in: " + inputString);
+                            return;
+                        }
+                    }
+                    index = (short)(1 + i);
+                }
+            }
             // Get Arguments
-            List<string> tempList = new();
+            if (index >= inputString.Length){
+                return;
+            }
+            arguments = new();
             bool skipSpace = false;
             string temp = "";
-            for (int i = index; i < s.Length; i++)
+            for (short i = index; i < inputString.Length; i++)
             {
-                char c = s[i];
+                char c = inputString[i];
                 if (c == '"') // " are use when spaces are in a file or directory name
                 {
                     skipSpace = !skipSpace;
@@ -79,7 +64,7 @@ namespace Util
                 {
                     if (temp != "")
                     {
-                        tempList.Add(temp);
+                        arguments.Add(temp);
                         temp = "";
                     }
                     continue;
@@ -89,33 +74,33 @@ namespace Util
                     temp += c;
                 }
             }
-            tempList.Add(temp);
-            arguments = tempList.ToArray();
+            arguments.Add(temp);
             return;
+        }
+        private bool CharExistInList(List<char> options, char c){
+            foreach(char value in options){
+                if(c == value){
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool RemoveArgumentAt(short index){
+            if(arguments == null){
+                return false;
+            }
+            if(arguments.Count > index){
+                arguments.RemoveAt(index);
+                return true;
+            }
+            return false;
         }
     }
     public class Utils
     {
-        public static long GetDirectorySize(DirectoryInfo directory){
-            long size = 0;
-            try{
-                FileInfo[] fileInfos = directory.GetFiles();
-                foreach (FileInfo file in fileInfos){
-                    size += file.Length;
-                }
-                DirectoryInfo[] directories = directory.GetDirectories();
-                Parallel.ForEach<DirectoryInfo,long>(directories, 
-                    () => 0,
-                    (i, loop, incr) =>{
-                        incr += GetDirectorySize(i);
-                        return incr;
-                },
-                incr => Interlocked.Add(ref size, incr));
-            }catch (UnauthorizedAccessException e){
-                Console.WriteLine("Error: Calculating folder size with: \n" + e.Message);
-            }
-            return size;
-            
+        public static void PrintAndLog(string msg){
+            Console.WriteLine(msg);
+            Logs.WriteLog(msg);
         }
         public static string GetTime(){
             return DateTime.Now.ToString() + " : ";
@@ -126,7 +111,7 @@ namespace Util
             string[] arr = temp[0..].Split('/');
             temp = "";
             for(int i = 0; i < arr.Length; i++){
-                temp += arr[i] + '_';
+                temp += '_' + arr[i];
             }
             return temp;
         }

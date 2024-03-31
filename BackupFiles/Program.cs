@@ -15,21 +15,28 @@ namespace BackUp{
                 Args args = new(input);
                 
                 if(args.command == "add"){
-                    data.Add(args);
+                    //data.Add(args);
+                    data.AddCommand(args);
                 }else if(args.command == "remove"){
-                    data.Remove(args);
+                    //data.Remove(args);
+                    data.RemoveCommand(args);
                 }else if(args.command == "backup"){
-                    data.NewBackup(args);
+                    //data.NewBackup(args);
+                    data.BackupCommand(args);
                 }else if(args.command == "list"){
-                    data.ListFiles();
+                    //data.ListFiles();
+                    data.ListCommand();
                 }else if(args.command == "help"){
                     Data.HelpInfo();
+                    //Data.HelpInfo();
                 }else if(args.command == "version"){
-                    Console.WriteLine("BackupFiles version 1.0.2");
+                    Console.WriteLine("BackupFiles version 1.1.0");
                 }else if(args.command == "exit"){
                     //it will now close
+                }else if(args.command == ""){
+                    //handled in Args Constructer
                 }else{
-                    Console.WriteLine("Invalid Command: " + args.command + "\nTry help for a list of commands");
+                    Utils.PrintAndLog("Invalid Command: " + args.command + "\nTry help for a list of commands");
                 }
             }
             Logs.WriteLog("Session Closed");
