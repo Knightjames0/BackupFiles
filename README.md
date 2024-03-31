@@ -1,4 +1,4 @@
-# BackupFiles V1.0.2
+# BackupFiles V1.1.0
 
 
 List of Commands
@@ -10,5 +10,7 @@ remove [file...] - remove file paths or directory paths from backup. For file pa
 list - provides a list paths added
 
 Backup [file] - Creates one of all the files add at a inputed location and must have a destination file path.
+
+backup -n [file] [file...] -Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.
 
 version - Display Version.
