@@ -8,6 +8,11 @@ namespace BackUp{
             fileList = new();
             UpdateList();
         }
+        /// <summary>
+        /// add the paths passed in to the fileList if they don't already exist
+        /// any that don't will be logged as an error
+        /// </summary>
+        /// <param name="args"></param>
         public void AddCommand(Args args){
             if(args.arguments is null){ // Check if their are arguments passed in
                 Console.WriteLine("Error: no arguments passed in.");
@@ -51,6 +56,11 @@ namespace BackUp{
                 }
             }
         }
+        /// <summary>
+        /// check to see if the path specified already exists in the fileList
+        /// </summary>
+        /// <param name="data_Path">filePath of type DataPath</param>
+        /// <returns>returns True if it already exists in fileList</returns>
         private bool HasPath(DataPath data_Path){ // Check if has path already
             bool result = false;
             Parallel.ForEach(fileList, data => {
@@ -60,6 +70,9 @@ namespace BackUp{
             });
             return result;
         }
+        /// <summary>
+        /// Lists out all the file paths passed into the fileList
+        /// </summary>
         public void ListCommand(){
             if(fileList.Count == 0){
                 Console.WriteLine("List is empty");
@@ -85,6 +98,10 @@ namespace BackUp{
                 Console.Write(helpFile[i]);
             }
         }
+        /// <summary>
+        /// try to remove a paths from the fileList if they exist in the list
+        /// </summary>
+        /// <param name="args"></param>
         public void RemoveCommand(Args args){
             if(args.arguments is null || args.arguments.Count == 0){ // Check if their are arguments passed in
                 Console.WriteLine("Error: no arguments passed in.");
@@ -123,6 +140,10 @@ namespace BackUp{
         private void UpdateList(){
             fileList = DataFilePaths.ReadData();
         }
+        /// <summary>
+        /// provides a method to backup files from the fileList
+        /// </summary>
+        /// <param name="args"></param>
         public void BackupCommand(Args args){
             if(args.arguments is null){ // Check if their are arguments passed in
                 Console.WriteLine("Error: no arguments passed in.");

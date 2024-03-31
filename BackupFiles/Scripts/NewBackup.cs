@@ -20,7 +20,40 @@ namespace BackUp{
             this.checkPriorBackups = checkPriorBackups;
             BackupCreate();
         }
-
+        
+        private ulong AddFileTypePath(string path){
+            if(!File.Exists(path)){
+                Utils.PrintAndLog("Error: file doesn't exist: " + path);
+                return 0;
+            }
+            FileInfo file;
+            try{
+                file = new FileInfo(path);
+            }catch(Exception e){
+                Utils.PrintAndLog("Error: " + path + " \nReason: " + e.Message);
+                return 0;
+            }
+            if(checkPriorBackups){
+                if(IsFileInPriorBackups(file)){
+                    return 0;
+                }
+            }
+            if(!filePaths.TryAdd(path,path[0] + path[2..])){
+                Logs.WriteLog("Warning: may already exist in list of files to backup: " + path);
+                return 0;
+            }
+            int t = path.LastIndexOf('\\',path.Length - 1);
+            directoryPaths.TryAdd(path[0] + path[2..(t+1)],0x00);
+            try{
+                return (ulong) file.Length;
+            }catch(Exception e){
+                Utils.PrintAndLog("Error: " + path + " \nReason: " + e.Message);
+                return 0;
+            }
+        }
+        /// <summary>
+        /// Create a new backup of the from the paths in fileList
+        /// </summary>
         private void BackupCreate(){
             if(fileList.Count == 0){
                 Console.WriteLine("No files to backup added");
@@ -32,27 +65,7 @@ namespace BackUp{
             {
                 string path = dataPath.GetFullPath();
                 if(dataPath.fileType == '-'){//file
-                    if(!File.Exists(path)){
-                        Utils.PrintAndLog("Error: file doesn't exist: " + path);
-                        continue;
-                    }
-                    if(checkPriorBackups){
-                        FileInfo file = new FileInfo(path);
-                        if(IsFileInPriorBackups(file)){
-                            continue;
-                        }
-                    }
-                    if(filePaths.TryAdd(path,path[0] + path[2..])){
-                        int t = path.LastIndexOf('\\',path.Length - 1);
-                        directoryPaths.TryAdd(path[0] + path[2..(t+1)],0x00);
-                        try{
-                            backupSize += (ulong) new FileInfo(path).Length;
-                        }catch(Exception e){
-                            Utils.PrintAndLog("Error: " + path + " \nReason: " + e.Message);
-                        }
-                    }else{
-                        Logs.WriteLog("Warning: may already exist in list of files to backup: " + path);
-                    }
+                    AddFileTypePath(path);
                 }
                 else if(dataPath.fileType == 'd'){//directory tree
                     if(!Directory.Exists(path)){
@@ -66,11 +79,15 @@ namespace BackUp{
                     Utils.PrintAndLog("Error: failed to handle: " + path);
                 }
             }
+            if(!CheckEnoughDriveSpace(folderPath, backupSize)){
+                return;
+            }
             //ask user if size is ok
-            if(!GetUserConfirmation(folderPath,backupSize)){
+            if(!GetUserConfirmation(folderPath, backupSize)){
                 Console.WriteLine("User didn't continue with backup progress");
                 return; //close if "n" or not enough disk space
             }
+            //Build the backup
             long startTime = DateTime.Now.Ticks;
             //Create directory tree
             CreateDirectoryTreeDown(folderPath);
@@ -98,18 +115,22 @@ namespace BackUp{
                 }
             }
         }
-        private static bool GetUserConfirmation(string location, ulong backupSize){
-            Console.Write("The file size to be backed up is: {0:N3} Megabytes would you like to continue? (y/n) ", backupSize / 1_000_000f);
-            string answer = "";
+        private static bool CheckEnoughDriveSpace(string location, ulong backupSize){
             try{
                 DriveInfo driveInfo = new("" + location[0]);
-                if((ulong)driveInfo.AvailableFreeSpace - 1000000 < backupSize){ //require atleast 1 MB of free space left for any unforeseen issues
+                if((ulong)driveInfo.AvailableFreeSpace - 8_000_000 < backupSize){ //require atleast 8 MB of free space left for any unforeseen issues
                     Utils.PrintAndLog("Error: Not enough free space on drive: " + location);
                     return false;
                 }
+                return true;
             }catch(Exception e){
                 Utils.PrintAndLog("Error: Getting drive info: " + location + " \nReason: " + e);
+                return false;
             }
+        }
+        private static bool GetUserConfirmation(string location, ulong backupSize){
+            Console.Write("The file size to be backed up is: {0:N3} Megabytes would you like to continue? (y/n) ", backupSize / 1_000_000f);
+            string answer = "";
             while(answer != "y" && answer != "n"){
                 Console.Write(">");
                 answer = (Console.ReadLine() + "").Trim().ToLower();
@@ -119,7 +140,16 @@ namespace BackUp{
             }
             return answer == "y";
         }
+        /// <summary>
+        /// checks if it already exist in a prior backup.
+        /// also with return false is checkPriorBackups is false
+        /// </summary>
+        /// <param name="file">file to be checked agansit prior backups</param>
+        /// <returns>returns true if it exists in prior backups</returns>
         private bool IsFileInPriorBackups(FileInfo file){
+            if(!checkPriorBackups){
+                return false;
+            }
             string filePath = file.FullName;
             filePath = filePath[0] + filePath[2..];
             foreach(string priorBackup in priorBackups){
@@ -154,6 +184,11 @@ namespace BackUp{
             }
             return false;
         }
+        /// <summary>
+        /// Creates a directory at a specified path
+        /// </summary>
+        /// <param name="path">path to create directory at</param>
+        /// <returns>returns true if it was successful </returns>
         private static bool CreateDir(string path){
             try{
                 Directory.CreateDirectory(path);
@@ -163,6 +198,11 @@ namespace BackUp{
                 return false;
             }
         }
+        /// <summary>
+        /// adds all files to filePaths and all directories to directoryPaths
+        /// </summary>
+        /// <param name="sourcePath">staring point</param>
+        /// <returns>the size of all the files part of this file tree that aren't already counted</returns>
         private ulong CreateDirectoryTreeUp(string sourcePath){
             if(sourcePath.Length > Data.MaxFileSize){ //don't allow for large file paths to be copied can prevent infinate loops
                 Utils.PrintAndLog("Error: Too long of file name: " + sourcePath);
@@ -176,10 +216,8 @@ namespace BackUp{
                 DirectoryInfo directoryInfo = new(sourcePath);
                 FileInfo[] fileInfos = directoryInfo.GetFiles(); //get all files in current directory
                 foreach (FileInfo file in fileInfos){
-                    if(checkPriorBackups){
-                        if(IsFileInPriorBackups(file)){
-                            continue;
-                        }
+                    if(IsFileInPriorBackups(file)){
+                        continue;
                     }
                     if(filePaths.TryAdd(file.FullName, sourcePath[0] + sourcePath[2..] + file.Name)){
                         size += (ulong)file.Length;
