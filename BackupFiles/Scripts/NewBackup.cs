@@ -1,8 +1,7 @@
 using System.Collections.Concurrent;
 using Util;
 
-namespace BackUp
-{
+namespace BackUp{
     public class NewBackup{
         private List<DataPath> fileList;
         private List<string> priorBackups;
