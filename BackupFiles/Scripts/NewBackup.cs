@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 using Util;
 
-namespace BackUp{
+namespace BackUp
+{
     public class NewBackup{
         private List<DataPath> fileList;
         private List<string> priorBackups;
@@ -13,8 +13,7 @@ namespace BackUp{
         private Dictionary<string, byte> directoryPaths = new(64);
         // Value = path in backup
 
-        //Temp Testing
-        public static int fileCalls = 0;
+        public int fileCalls = 0;
 
         public NewBackup(List<DataPath> fileList, List<string> priorBackups, string folderPath, bool checkPriorBackups)
         {
