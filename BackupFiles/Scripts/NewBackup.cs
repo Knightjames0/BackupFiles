@@ -12,6 +12,8 @@ namespace BackUp{
         private Dictionary<string, byte> directoryPaths = new(64);
         // Value = path in backup
 
+        public int fileCalls = 0;
+
         public NewBackup(List<DataPath> fileList, List<string> priorBackups, string folderPath, bool checkPriorBackups)
         {
             this.fileList = fileList;
@@ -61,6 +63,7 @@ namespace BackUp{
             }
             ulong backupSize = 0;
             //LoadBackup
+            fileCalls = 0;
             foreach (DataPath dataPath in fileList)
             {
                 string path = dataPath.GetFullPath();
@@ -82,6 +85,7 @@ namespace BackUp{
             if(!CheckEnoughDriveSpace(folderPath, backupSize)){
                 return;
             }
+            Util.Logs.WriteLog("fileCalls: " + fileCalls);
             //ask user if size is ok
             if(!GetUserConfirmation(backupSize)){
                 Console.WriteLine("User didn't continue with backup progress");
@@ -118,7 +122,7 @@ namespace BackUp{
         private static bool CheckEnoughDriveSpace(string location, ulong backupSize){
             try{
                 DriveInfo driveInfo = new("" + location[0]);
-                if((ulong)driveInfo.AvailableFreeSpace - 8_000_000 < backupSize){ //require atleast 8 MB of free space left for any unforeseen issues
+                if((ulong)driveInfo.AvailableFreeSpace - 16_000_000 < backupSize){ //require atleast 16 MB of free space left for any unforeseen issues
                     Utils.PrintAndLog("Error: Not enough free space on drive: " + location);
                     return false;
                 }
@@ -158,7 +162,8 @@ namespace BackUp{
                     continue;
                 }
                 FileInfo priorFile = new(priorFilePath);
-                if(priorFile.LastWriteTime != file.LastWriteTime){
+                //To check if the file has been modified since prior backups
+                if(priorFile.LastWriteTime.TimeOfDay != file.LastWriteTime.TimeOfDay && priorFile.LastWriteTime.Date != file.LastWriteTime.Date){
                     continue;
                 }
                 if(priorFile.Length != file.Length){
@@ -216,6 +221,7 @@ namespace BackUp{
                 DirectoryInfo directoryInfo = new(sourcePath);
                 FileInfo[] fileInfos = directoryInfo.GetFiles(); //get all files in current directory
                 foreach (FileInfo file in fileInfos){
+                    fileCalls++;
                     if(IsFileInPriorBackups(file)){
                         continue;
                     }

@@ -151,22 +151,26 @@ namespace BackUp{
             }
             bool checkPriorBackups = false;
             if(args.options is not null){
-                if(args.options.Count == 1){
-                    if(args.options[0] == 'n'){
-                        checkPriorBackups = true;
-                    }else{
-                        Console.WriteLine("Error: Invalid option");
-                        return;
-                    }
-                }
-                if(args.options.Count > 1){
+                if(args.options.Count != 1){
                     Console.WriteLine("Error: Invalid options passed in to backup.");
                     return;
                 }
+                if(args.options[0] == 'n'){
+                    checkPriorBackups = true;
+                }else{
+                    Console.WriteLine("Error: Invalid option");
+                    return;
+                }
+                
             }
             //add all prior backup paths to list
             List<string> priorBackups = new();
-            if(checkPriorBackups){
+            if(!checkPriorBackups){
+                if(args.arguments.Count > 1){
+                    Utils.PrintAndLog("Error: too many arguments passed in");
+                    return;
+                }
+            }else{
                 if(args.arguments.Count < 2){
                     Utils.PrintAndLog("Error: no prior backups passed in");
                     return;
