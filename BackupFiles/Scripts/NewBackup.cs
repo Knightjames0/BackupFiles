@@ -115,7 +115,7 @@ namespace BackUp{
             logQueue.Enqueue(msg);
             if(copiesFailed > 0){
                 Console.WriteLine("Backup partly completed at: " + folderPath + "\nWith " + copiesFailed + " files failed to copy.\nTo see all files that failed to copy check the log");
-                logQueue.Enqueue("Files failed to copy: " + copiesFailed);
+                logQueue.Enqueue("Warning: Files failed to copy: " + copiesFailed);
             }else{
                 Console.WriteLine("Backup Completed at: " + folderPath);
             }
