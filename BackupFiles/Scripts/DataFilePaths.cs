@@ -71,7 +71,12 @@ namespace BackUp{
             }
             return input;
         }
-        public static bool RemoveData(DataPath[] dataPaths){
+        /// <summary>
+        /// Tries to Remove a array of file paths from the fileList
+        /// </summary>
+        /// <param name="dataPaths">array of DataPaths</param>
+        /// <returns>null if an error occured or bool array true if it succeeded or false if not in fileList </returns>
+        public static bool[]? RemoveData(DataPath[] dataPaths){
             string tempFile = Path.GetTempFileName();
             bool[] isFound = new bool[dataPaths.Length];
             string[] paths = new string[dataPaths.Length];
@@ -105,9 +110,9 @@ namespace BackUp{
                 File.Delete(tempFile);
             }catch(Exception e){
                 Logs.WriteLog(e.ToString());
-                return false;
+                return null;
             }
-            return true;
+            return isFound;
         }
         private static bool ExistsInData(bool[] isFound, string[] paths, string temp){
             for(int i = 0; i < paths.Length; i++){ //checks if path equals line in data file

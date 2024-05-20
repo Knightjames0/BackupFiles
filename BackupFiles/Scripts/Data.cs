@@ -51,9 +51,11 @@ namespace BackUp{
                     Utils.PrintAndLog("Error: already in list of files: " + path);
                     continue;
                 }
-                if(DataFilePaths.WriteData(data)){
-                    fileList.Add(data);
+                if(!DataFilePaths.WriteData(data)){
+                    continue;
                 }
+                fileList.Add(data);
+                Console.WriteLine("Added: " + data.GetFullPath());
             }
         }
         /// <summary>
@@ -128,15 +130,25 @@ namespace BackUp{
             }
             
             DataPath[] dataPaths = new DataPath[args.arguments.Count];
-            for (int i = 0; i < dataPaths.Length; i++)
-            {
+            for (int i = 0; i < dataPaths.Length; i++){
                 dataPaths[i] = new DataPath(args.arguments.ElementAt(i));
             }
-            if(!DataFilePaths.RemoveData(dataPaths)){
+
+            bool[]? isRemoved = DataFilePaths.RemoveData(dataPaths);
+            if (isRemoved != null){
+                for (int i = 0; i < dataPaths.Length; i++){
+                    if(isRemoved[i]){
+                        Console.WriteLine("Removed: " + dataPaths[i].GetFullPath());
+                    }
+                }
+            }else{
                 Console.WriteLine("Error: removing paths from list");
             }
             UpdateList();
         }
+        /// <summary>
+        /// Reloads the fileList
+        /// </summary>
         private void UpdateList(){
             fileList = DataFilePaths.ReadData();
         }

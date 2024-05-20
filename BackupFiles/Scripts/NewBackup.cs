@@ -12,8 +12,8 @@ namespace BackUp{
         private Dictionary<string, byte> directoryPaths = new(64);
         // Value = path in backup
 
-        public int fileCalls = 0;
-
+        private int fileCalls = 0;
+        private const ulong MinimumFreeSpaceLeft = 16_000_000;
         public NewBackup(List<DataPath> fileList, List<string> priorBackups, string folderPath, bool checkPriorBackups)
         {
             this.fileList = fileList;
@@ -68,14 +68,14 @@ namespace BackUp{
             {
                 string path = dataPath.GetFullPath();
                 if(dataPath.fileType == '-'){//file
-                    AddFileTypePath(path);
+                    backupSize += AddFileTypePath(path);
                 }
                 else if(dataPath.fileType == 'd'){//directory tree
                     if(!Directory.Exists(path)){
                         Utils.PrintAndLog("Error: directory doesn't exist: " + path);
                         continue;
                     }
-                    //TODO add files in directories to list
+                    //Add files in directories to list
                     backupSize += CreateDirectoryTreeUp(path);
                 }
                 else{
@@ -85,7 +85,7 @@ namespace BackUp{
             if(!CheckEnoughDriveSpace(folderPath, backupSize)){
                 return;
             }
-            Util.Logs.WriteLog("fileCalls: " + fileCalls);
+            Logs.WriteLog("fileCalls: " + fileCalls);
             //ask user if size is ok
             if(!GetUserConfirmation(backupSize)){
                 Console.WriteLine("User didn't continue with backup progress");
@@ -100,29 +100,57 @@ namespace BackUp{
             }
             Console.WriteLine("File Tree Built");
             //Copy Files
+            ConcurrentQueue<string> logQueue = new();
+            long copiesFailed = 0;
+
             Parallel.ForEach(filePaths,file => {
                 string device = file.Key;
                 string backup = folderPath + file.Value;
-                CopyFile(device,backup);
+                if(!CopyFile(device,backup, logQueue)){
+                    Interlocked.Add(ref copiesFailed,1);//add to files failed to copy
+                }
             });
-            Logs.WriteLog(string.Format("Info: Finished in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f));
-            Console.WriteLine("Backup Complete at: " + folderPath);
+
+            string msg = string.Format("Info: Finished in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
+            logQueue.Enqueue(msg);
+            if(copiesFailed > 0){
+                Console.WriteLine("Backup partly completed at: " + folderPath + "\nWith " + copiesFailed + " files failed to copy.\nTo see all files that failed to copy check the log");
+                logQueue.Enqueue("Warning: Files failed to copy: " + copiesFailed);
+            }else{
+                Console.WriteLine("Backup Completed at: " + folderPath);
+            }
+            Logs.WriteLog(logQueue.ToArray());
+            
         }
-        private static void CopyFile(string device, string backup){
+        /// <summary>
+        /// Copies files from one location to another for parallel execution with error handling
+        /// </summary>
+        /// <param name="device">Source Path</param>
+        /// <param name="backup">Destination Path</param>
+        /// <param name="logQueue">A localtion to queue up error messages</param>
+        /// <returns>Returns true if it was successful</returns>
+        private static bool CopyFile(string device, string backup, ConcurrentQueue<string> logQueue){
             if(File.Exists(backup)){
-                Logs.WriteLog("Warning: File already exists " + backup);
+                string msg = "Warning: File already exists " + backup;
+                logQueue.Enqueue(msg);
+                return false;
+                //Logs.WriteLog("Warning: File already exists " + backup);
             }else{
                 try{
                     File.Copy(device,backup);
                 }catch(Exception e){
-                    Utils.PrintAndLog("Error: Copying file to backup failed: " + device + " \nReason: " + e);
+                    string msg = "Error: Copying file to backup failed: " + device + " \nReason: " + e;
+                    logQueue.Enqueue(msg);
+                    return false;
+                    //Utils.PrintAndLog(msg);
                 }
             }
+            return true;
         }
         private static bool CheckEnoughDriveSpace(string location, ulong backupSize){
             try{
                 DriveInfo driveInfo = new("" + location[0]);
-                if((ulong)driveInfo.AvailableFreeSpace - 16_000_000 < backupSize){ //require atleast 16 MB of free space left for any unforeseen issues
+                if((ulong)driveInfo.AvailableFreeSpace - MinimumFreeSpaceLeft < backupSize){ //require atleast 16 MB of free space left for any unforeseen issues
                     Utils.PrintAndLog("Error: Not enough free space on drive: " + location);
                     return false;
                 }
