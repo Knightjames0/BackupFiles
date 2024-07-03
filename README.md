@@ -1,16 +1,17 @@
 # BackupFiles V1.1.2
 
+Simple command line tool for backing up data to external or local stoarge. While maintaing a local list up path for future backups.
 
 List of Commands
 
-add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with ("").
+add [file...] - Adds file paths or directory paths to backup. For file paths with spaces inclose with ("").
 
-remove [file...] - remove file paths or directory paths from backup. For file paths with spaces inclose with ("").
+remove [file...] - Removes file paths or directory paths from backup. For file paths with spaces inclose with ("").
 
-list - provides a list paths added
+list - Provides a list paths added
 
 Backup [file] - Creates one of all the files add at a inputed location and must have a destination file path.
 
-backup -n [file] [file...] -Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.
+backup -n [file] [file...] - Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.
 
-version - Display Version.
+version - Displays Version number.
