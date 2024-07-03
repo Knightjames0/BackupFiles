@@ -1,8 +1,9 @@
 # BackupFiles V1.1.2
 
-Simple command line tool for backing up data to external or local stoarge. While maintaing a local list up path for future backups.
+Simple command line tool for backing up data to external or local stoarge. As well maintains a list of file paths for future backups.
 
-List of Commands
+
+# List of Commands
 
 add [file...] - Adds file paths or directory paths to backup. For file paths with spaces inclose with ("").
 
