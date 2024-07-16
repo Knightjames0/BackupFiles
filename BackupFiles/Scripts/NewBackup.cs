@@ -237,7 +237,7 @@ namespace BackUp{
         /// <param name="sourcePath">staring point</param>
         /// <returns>the size of all the files part of this file tree that aren't already counted</returns>
         private ulong CreateDirectoryTreeUp(string sourcePath){
-            if(sourcePath.Length > Data.MaxFileSize){ //don't allow for large file paths to be copied can prevent infinate loops
+            if(sourcePath.Length > Data.MaxFileLength){ //don't allow for large file paths to be copied can prevent infinite loops
                 Utils.PrintAndLog("Error: Too long of file name: " + sourcePath);
                 return 0;
             }

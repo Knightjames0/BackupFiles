@@ -2,7 +2,7 @@ using Util;
 
 namespace BackUp{
     public class Data{
-        public const short MaxFileSize = 320;
+        public const short MaxFileLength = 320;
         private List<DataPath> fileList;
         public Data(){
             fileList = new();
@@ -25,7 +25,7 @@ namespace BackUp{
                 }
             }
             foreach(string path in args.arguments){
-                if(path.Length > MaxFileSize - 1){
+                if(path.Length > MaxFileLength - 1){
                     Utils.PrintAndLog("Error: Too long of file name: " + path);
                     continue;
                 }
@@ -80,9 +80,12 @@ namespace BackUp{
                 Console.WriteLine("List is empty");
                 return;
             }
-            foreach (var item in fileList)
+            //Sort the data for easy viewing
+            DataPath[] fileListSorted = fileList.ToArray();
+            Utils.QuickSort(fileListSorted);
+            foreach (var path in fileListSorted)
             {
-                Console.WriteLine("{0,-80}",item.GetFullPath()); // Just print file or dirctory path names for user
+                Console.WriteLine("{0,-80}",path.GetFullPath()); // Just print file or dirctory path names for user
             }
             Console.WriteLine("Done");
         }
@@ -91,7 +94,7 @@ namespace BackUp{
                 "List of Commands\n\n",
                 "add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with double quotes\".\n",
                 "remove [file...] - remove file paths or directory paths from backup. For file paths with spaces inclose with double quotes \".\n",
-                "list - provides a list paths added\n",
+                "list - Provides a sorted list of all paths added\n",
                 "backup [file] - Creates one of all the files add the inputed location and must have a destination file path.\n",
                 "backup -n [file] [file...] -Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.\n",
                 "version - Display Version.\n",
@@ -117,7 +120,7 @@ namespace BackUp{
             }
             for (short i = 0; i < args.arguments.Count; i++){
                 string path = args.arguments.ElementAt(i);
-                if(path.Length > MaxFileSize * 2){
+                if(path.Length > MaxFileLength * 2){
                     Utils.PrintAndLog("Error: Too long of file name: " + path);
                     args.RemoveArgumentAt(i);
                     i--;
