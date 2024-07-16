@@ -24,5 +24,15 @@ namespace BackUp{
             //DataPath isn't nullable
             return this.drive == other.drive && this.path == other.path;
         }
+        public int CompareTo(DataPath other){
+            //DataPath isn't nullable
+            if(this.drive > other.drive){
+                return 1;
+            }
+            if(this.drive < other.drive){
+                return -1;
+            }
+            return this.path.CompareTo(other.path);
+        }
     }
 }

@@ -1,3 +1,5 @@
+using BackUp;
+
 namespace Util
 {
     public readonly struct Args
@@ -114,6 +116,39 @@ namespace Util
                 temp += '_' + arr[i];
             }
             return temp;
+        }
+        /// <summary>
+        /// Quick Sort Algorithm for sorting an array of DataPaths
+        /// </summary>
+        /// <param name="dataPaths"></param>
+        public static void QuickSort(DataPath[] dataPaths){
+            if(dataPaths == null || dataPaths.Length == 0){
+                return;
+            }
+            InternalQuickSort(dataPaths, 0, dataPaths.Length-1);
+        }
+        private static void InternalQuickSort(DataPath[] dataPaths, int low, int high){
+            if(low >= high){
+                return;
+            }
+            int pivot = high;
+            DataPath dataPath = dataPaths[pivot];
+            DataPath temp;
+            for(int i = low; i < high;){
+                if(dataPath.CompareTo(dataPaths[i]) <= 0){
+                    temp = dataPaths[i];
+                    high--;
+                    dataPaths[i] = dataPaths[high];
+                    dataPaths[high] = temp;
+                }else{
+                    i++;
+                }
+            }
+            dataPaths[pivot] = dataPaths[high];
+            dataPaths[high] = dataPath;
+
+            InternalQuickSort(dataPaths, low, pivot-1);
+            InternalQuickSort(dataPaths, pivot+1, high);
         }
     }
 }
