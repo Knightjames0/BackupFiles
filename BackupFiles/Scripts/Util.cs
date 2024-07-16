@@ -122,7 +122,7 @@ namespace Util
         /// </summary>
         /// <param name="dataPaths"></param>
         public static void QuickSort(DataPath[] dataPaths){
-            if(dataPaths == null || dataPaths.Length == 0){
+            if(dataPaths == null || dataPaths.Length < 2){
                 return;
             }
             InternalQuickSort(dataPaths, 0, dataPaths.Length-1);
@@ -134,18 +134,18 @@ namespace Util
             int pivot = high;
             DataPath dataPath = dataPaths[pivot];
             DataPath temp;
-            for(int i = low; i < high;){
+            for(int i = low; i < pivot;){
                 if(dataPath.CompareTo(dataPaths[i]) <= 0){
                     temp = dataPaths[i];
-                    high--;
-                    dataPaths[i] = dataPaths[high];
-                    dataPaths[high] = temp;
+                    pivot--;
+                    dataPaths[i] = dataPaths[pivot];
+                    dataPaths[pivot] = temp;
                 }else{
                     i++;
                 }
             }
-            dataPaths[pivot] = dataPaths[high];
-            dataPaths[high] = dataPath;
+            dataPaths[high] = dataPaths[pivot];
+            dataPaths[pivot] = dataPath;
 
             InternalQuickSort(dataPaths, low, pivot-1);
             InternalQuickSort(dataPaths, pivot+1, high);
