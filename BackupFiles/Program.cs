@@ -36,7 +36,7 @@ namespace BackUp{
                 Data.HelpInfo();
                 //Data.HelpInfo();
             }else if(args.command == "version"){
-                Console.WriteLine("BackupFiles version 1.1.2");
+                Console.WriteLine("BackupFiles version 1.1.3");
             }else if(args.command == "exit"){
                 //it will now close the console
                 Console.WriteLine("Closing File Backup System");
