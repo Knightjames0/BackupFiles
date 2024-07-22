@@ -104,6 +104,7 @@ namespace BackUp{
             }
 
             //Building the backup
+            Console.WriteLine("Backup Started");
             startTime = DateTime.Now.Ticks;
             //Create directory tree
             CreateDirectoryTreeDown(folderPath);
