@@ -89,7 +89,7 @@ namespace BackUp{
             }
             msg = string.Format("Info: Finished building file to copy list in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
             logQueue.Enqueue(msg);
-            logQueue.Enqueue("fileCalls: " + fileCalls);
+            logQueue.Enqueue("Info: fileCalls: " + fileCalls);
             if(!CheckEnoughDriveSpace(folderPath, backupSize)){
                 Logs.WriteLog(logQueue.ToArray());
                 logQueue.Clear();
@@ -97,7 +97,7 @@ namespace BackUp{
             }
             //ask user if size is ok
             if(!GetUserConfirmation(backupSize)){
-                Console.WriteLine("Info: User didn't continue with backup progress");
+                Console.WriteLine("User didn't continue with backup progress");
                 Logs.WriteLog(logQueue.ToArray());
                 logQueue.Clear();
                 return; //close if "n" or not enough disk space
