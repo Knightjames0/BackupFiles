@@ -12,7 +12,6 @@ namespace BackUp{
         private Dictionary<string, byte> directoryPaths = new(64);
         // Value = path in backup
 
-        private int fileCalls = 0;
         private const ulong MinimumFreeSpaceLeft = 16_000_000;
         public NewBackup(List<DataPath> fileList, List<string> priorBackups, string folderPath, bool checkPriorBackups)
         {
@@ -61,9 +60,15 @@ namespace BackUp{
                 Console.WriteLine("No files to backup added");
                 return;
             }
+            string msg;
             ulong backupSize = 0;
+            int fileCalls = 0;
+            long startTime;
             //LoadBackup
-            fileCalls = 0;
+            ConcurrentQueue<string> logQueue = new();
+
+            //Building file to copy list
+            startTime = DateTime.Now.Ticks;
             foreach (DataPath dataPath in fileList)
             {
                 string path = dataPath.GetFullPath();
@@ -72,36 +77,45 @@ namespace BackUp{
                 }
                 else if(dataPath.fileType == 'd'){//directory tree
                     if(!Directory.Exists(path)){
-                        Utils.PrintAndLog("Error: directory doesn't exist: " + path);
+                        Utils.PrintAndLog("Error: Directory doesn't exist: " + path);
                         continue;
                     }
                     //Add files in directories to list
-                    backupSize += CreateDirectoryTreeUp(path);
+                    backupSize += CreateDirectoryTreeUp(path, ref fileCalls);
                 }
                 else{
-                    Utils.PrintAndLog("Error: failed to handle: " + path);
+                    Utils.PrintAndLog("Error: Failed to handle: " + path);
                 }
             }
+            msg = string.Format("Info: Finished building file to copy list in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
+            logQueue.Enqueue(msg);
+            logQueue.Enqueue("fileCalls: " + fileCalls);
             if(!CheckEnoughDriveSpace(folderPath, backupSize)){
+                Logs.WriteLog(logQueue.ToArray());
+                logQueue.Clear();
                 return;
             }
-            Logs.WriteLog("fileCalls: " + fileCalls);
             //ask user if size is ok
             if(!GetUserConfirmation(backupSize)){
-                Console.WriteLine("User didn't continue with backup progress");
+                Console.WriteLine("Info: User didn't continue with backup progress");
+                Logs.WriteLog(logQueue.ToArray());
+                logQueue.Clear();
                 return; //close if "n" or not enough disk space
             }
-            //Build the backup
-            long startTime = DateTime.Now.Ticks;
+
+            //Building the backup
+            startTime = DateTime.Now.Ticks;
             //Create directory tree
             CreateDirectoryTreeDown(folderPath);
             foreach(var dirPath in directoryPaths){
                 CreateDirectoryTreeDown(folderPath + dirPath.Key);
             }
+            msg = string.Format("Info: File Tree Built in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
+            logQueue.Enqueue(msg);
             Console.WriteLine("File Tree Built");
             //Copy Files
-            ConcurrentQueue<string> logQueue = new();
             long copiesFailed = 0;
+            startTime = DateTime.Now.Ticks;
 
             Parallel.ForEach(filePaths,file => {
                 string device = file.Key;
@@ -111,7 +125,7 @@ namespace BackUp{
                 }
             });
 
-            string msg = string.Format("Info: Finished in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
+            msg = string.Format("Info: Finished coping files in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
             logQueue.Enqueue(msg);
             if(copiesFailed > 0){
                 Console.WriteLine("Backup partly completed at: " + folderPath + "\nWith " + copiesFailed + " files failed to copy.\nTo see all files that failed to copy check the log");
@@ -120,7 +134,7 @@ namespace BackUp{
                 Console.WriteLine("Backup Completed at: " + folderPath);
             }
             Logs.WriteLog(logQueue.ToArray());
-            
+            logQueue.Clear();    
         }
         /// <summary>
         /// Copies files from one location to another for parallel execution with error handling
@@ -236,7 +250,7 @@ namespace BackUp{
         /// </summary>
         /// <param name="sourcePath">staring point</param>
         /// <returns>the size of all the files part of this file tree that aren't already counted</returns>
-        private ulong CreateDirectoryTreeUp(string sourcePath){
+        private ulong CreateDirectoryTreeUp(string sourcePath, ref int fileCalls){
             if(sourcePath.Length > Data.MaxFileLength){ //don't allow for large file paths to be copied can prevent infinite loops
                 Utils.PrintAndLog("Error: Too long of file name: " + sourcePath);
                 return 0;
@@ -262,7 +276,7 @@ namespace BackUp{
                 foreach (DirectoryInfo dir in directories){
                     string dirPath = dir.FullName + '\\';
                     if(Directory.Exists(dirPath)){
-                        size += CreateDirectoryTreeUp(dirPath);
+                        size += CreateDirectoryTreeUp(dirPath, ref fileCalls);
                     }
                 }
             }catch(Exception e){
