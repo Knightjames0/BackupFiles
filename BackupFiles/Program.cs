@@ -21,22 +21,17 @@ namespace BackUp{
             Args args = new(input);
             
             if(args.command == "add"){
-                //data.Add(args);
                 data.AddCommand(args);
             }else if(args.command == "remove"){
-                //data.Remove(args);
                 data.RemoveCommand(args);
             }else if(args.command == "backup"){
-                //data.NewBackup(args);
                 data.BackupCommand(args);
             }else if(args.command == "list"){
-                //data.ListFiles();
                 data.ListCommand();
             }else if(args.command == "help"){
                 Data.HelpInfo();
-                //Data.HelpInfo();
             }else if(args.command == "version"){
-                Console.WriteLine("BackupFiles version 1.1.3");
+                Data.Version();
             }else if(args.command == "exit"){
                 //it will now close the console
                 Console.WriteLine("Closing File Backup System");

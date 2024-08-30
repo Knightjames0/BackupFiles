@@ -1,4 +1,4 @@
-# BackupFiles V1.1.3
+# BackupFiles V1.1.4
 
 Simple command line tool for backing up data to external or local stoarge. As well maintains a list of file paths for future backups.
 
@@ -14,5 +14,7 @@ list - Provides a sorted list of all paths added
 Backup [file] - Creates one of all the files add at a inputed location and must have a destination file path.
 
 backup -n [file] [file...] - Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.
+
+backup -c [file] - Check for any Directories in the same folder that are old backups and copies only ones that don't exist in other backups.
 
 version - Displays Version number.
