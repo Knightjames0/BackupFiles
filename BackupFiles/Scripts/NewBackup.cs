@@ -64,7 +64,7 @@ namespace BackUp{
             ulong backupSize = 0;
             int fileCalls = 0;
             long startTime;
-            //LoadBackup
+            //Create logging queue
             ConcurrentQueue<string> logQueue = new();
 
             //Building file to copy list

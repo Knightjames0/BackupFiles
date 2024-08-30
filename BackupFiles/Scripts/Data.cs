@@ -1,4 +1,6 @@
+using System.Reflection;
 using Util;
+
 
 namespace BackUp{
     public class Data{
@@ -160,41 +162,67 @@ namespace BackUp{
         /// </summary>
         /// <param name="args"></param>
         public void BackupCommand(Args args){
-            if(args.arguments is null){ // Check if their are arguments passed in
+            // Check if their are arguments passed in
+            if(args.arguments is null){
                 Console.WriteLine("Error: no arguments passed in.");
                 return;
             }
             bool checkPriorBackups = false;
+            bool checkForBackupsInFolder = false;
+            List<string> priorBackups = new();
+            
+            //backup location path
+            string folderPath = args.arguments[0];
+            args.arguments.RemoveAt(0);
+            if(folderPath[^1] != '\\'){
+                folderPath += '\\';
+            }
+            if(!Directory.Exists(folderPath)){
+                Utils.PrintAndLog("Error: Path selected to backup to doesn't exist: " + folderPath);
+                return;
+            }
+
+            //Check Options
             if(args.options is not null){
-                if(args.options.Count != 1){
+                if(args.options.Contains('n')){
+                    args.options.Remove('n');
+                    checkPriorBackups = true;
+                }
+                if(args.options.Contains('c')){
+                    args.options.Remove('c');
+                    checkForBackupsInFolder = true;
+                }
+                if(args.options.Count > 0){
                     Console.WriteLine("Error: Invalid options passed in to backup.");
                     return;
                 }
-                if(args.options[0] == 'n'){
-                    checkPriorBackups = true;
-                }else{
-                    Console.WriteLine("Error: Invalid option");
-                    return;
-                }
-                
             }
-            //add all prior backup paths to list
-            List<string> priorBackups = new();
+            //Add all priorbackups in backup folderPath
+            if(checkForBackupsInFolder){
+                if(PriorBackupPaths(priorBackups, folderPath)){
+                    return; //Error thrown.
+                }
+            }
+
+            //Check Arguments passed in
             if(!checkPriorBackups){
-                if(args.arguments.Count > 1){
+                if(args.arguments.Count > 0){
                     Utils.PrintAndLog("Error: too many arguments passed in");
                     return;
                 }
             }else{
-                if(args.arguments.Count < 2){
+                if(args.arguments.Count < 1){
                     Utils.PrintAndLog("Error: no prior backups passed in");
                     return;
                 }
-                for (int i = 1; i < args.arguments.Count; i++)
-                {
+                //add all prior backup paths to list
+                for (int i = 0; i < args.arguments.Count; i++){
                     string priorBackupPath = args.arguments.ElementAt(i);
                     if(priorBackupPath[^1] != '\\'){
                         priorBackupPath += '\\';
+                    }
+                    if(priorBackups.Contains(priorBackupPath)){ //check if adding prior paths if path was already added
+                        continue;
                     }
                     if(!Directory.Exists(priorBackupPath)){
                         Utils.PrintAndLog("Error: Prior Backup Path doesn't exist: " + priorBackupPath);
@@ -203,15 +231,8 @@ namespace BackUp{
                     priorBackups.Add(priorBackupPath);
                 }
             }
+            
             //creates folder name
-            string folderPath = args.arguments[0];
-            if(folderPath[^1] != '\\'){
-                folderPath += '\\';
-            }
-            if(!Directory.Exists(folderPath)){
-                Utils.PrintAndLog("Error: Path selected to backup to doesn't exist: " + folderPath);
-                return;
-            }
             folderPath += "Backup" + Utils.GetDate();
             //Add number if more then one today
             string temp = "";
@@ -221,7 +242,52 @@ namespace BackUp{
                 count++;
             }
             folderPath += temp + '\\';
-            _ = new NewBackup(fileList, priorBackups, folderPath, checkPriorBackups);
+
+
+            if(checkForBackupsInFolder){//just c or (c and n)
+                _ = new NewBackup(fileList, priorBackups, folderPath, checkForBackupsInFolder);
+            }else{//check for n
+                _ = new NewBackup(fileList, priorBackups, folderPath, checkPriorBackups);
+            }
+        }
+        /// <summary>
+        /// Add all priorbackups in backup folderPath
+        /// </summary>
+        /// <param name="priorBackups"></param>
+        /// <param name="folderPath"></param>
+        /// <returns>true if an error occured during this process</returns>
+        private bool PriorBackupPaths(List<string> priorBackups, string folderPath){
+            //Directory has already been check
+            try{
+                DirectoryInfo directoryInfo = new(folderPath);
+                DirectoryInfo[] directoryInfos = directoryInfo.GetDirectories();
+                foreach (DirectoryInfo dir in directoryInfos){
+                    if(!dir.Name.StartsWith("Backup_")){
+                        continue;
+                    }
+                    if(!char.IsNumber(dir.Name[^1])){
+                        continue;
+                    }
+                    string path = dir.FullName;
+                    if(path[^1] != '\\'){
+                        path += '\\';
+                    }
+                    priorBackups.Add(path);
+                }
+            }
+            catch (Exception e){
+                Utils.PrintAndLog("Error: Prior Backup Paths in Directory. \nReason: " + e.Message);
+                return true;
+            }
+            return false;
+        }
+
+        internal static void Version(){
+            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            if(version is null){
+                version = "null";
+            }
+            Console.WriteLine("BackupFiles version: " + version);
         }
     }
 }
