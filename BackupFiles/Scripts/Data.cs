@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using Util;
 
@@ -284,10 +285,13 @@ namespace BackUp{
         }
 
         internal static void Version(){
-            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            if(version is null){
-                version = "null";
+            var assembly = Assembly.GetExecutingAssembly();
+            if(!File.Exists(assembly.Location)){
+                Utils.PrintAndLog("Error: Can't find the excutable loctaion to get version number");
+                return;
             }
+            var versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string version = $"{versionInfo.FileMajorPart}.{versionInfo.FileMinorPart}.{versionInfo.FileBuildPart}";
             Console.WriteLine("BackupFiles version: " + version);
         }
     }
