@@ -1,4 +1,4 @@
-# BackupFiles V1.1.3
+# BackupFiles V1.1.4
 
 Simple command line tool for backing up data to external or local stoarge. As well maintains a list of file paths for future backups.
 
