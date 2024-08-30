@@ -98,7 +98,8 @@ namespace BackUp{
                 "remove [file...] - remove file paths or directory paths from backup. For file paths with spaces inclose with double quotes \".\n",
                 "list - Provides a sorted list of all paths added\n",
                 "backup [file] - Creates one of all the files add the inputed location and must have a destination file path.\n",
-                "backup -n [file] [file...] -Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.\n",
+                "backup -n [file] [file...] - Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.\n",
+                "backup -c [file] - Check for any Directories in the same folder that are old backups and copies only ones that don't exist in other backups.",
                 "version - Display Version.\n",
             };
             for(int i = 0; i < helpFile.Length; i++){
