@@ -15,4 +15,6 @@ Backup [file] - Creates one of all the files add at a inputed location and must 
 
 backup -n [file] [file...] - Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.
 
+backup -c [file] - Check for any Directories in the same folder that are old backups and copies only ones that don't exist in other backups.
+
 version - Displays Version number.
