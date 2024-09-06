@@ -131,7 +131,7 @@ namespace Util
             if(low >= high){
                 return;
             }
-            int pivot = high;
+            int pivot = InternalQuickSortPivotSelect(dataPaths, low, high);
             DataPath dataPath = dataPaths[pivot];
             DataPath temp;
             for(int i = low; i < pivot;){
@@ -149,6 +149,26 @@ namespace Util
 
             InternalQuickSort(dataPaths, low, pivot-1);
             InternalQuickSort(dataPaths, pivot+1, high);
+        }
+        private static int InternalQuickSortPivotSelect(DataPath[] dataPaths, int low, int high){
+            if(high - low < 3){
+                return high;
+            }
+            int mid = (high + low)/2;
+            if(dataPaths[low].CompareTo(dataPaths[mid]) <= 0){
+                if(dataPaths[mid].CompareTo(dataPaths[high]) < 0){
+                    DataPath temp = dataPaths[mid];
+                    dataPaths[mid] = dataPaths[high];
+                    dataPaths[high] = temp;
+                }
+            }else{
+                if(dataPaths[mid].CompareTo(dataPaths[high]) < 0){
+                    DataPath temp = dataPaths[low];
+                    dataPaths[low] = dataPaths[high];
+                    dataPaths[high] = temp;
+                }
+            }
+            return high;
         }
     }
 }
