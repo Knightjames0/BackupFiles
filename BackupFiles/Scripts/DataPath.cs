@@ -1,7 +1,7 @@
 namespace BackUp{
     public struct DataPath{
         public readonly char fileType;
-        private readonly char drive;
+        public readonly char drive;
         private readonly string path;
         public DataPath(char fileType, string fullPath){
             this.fileType = fileType;

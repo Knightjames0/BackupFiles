@@ -245,12 +245,16 @@ namespace BackUp{
             }
             folderPath += temp + '\\';
 
-
+            BackupFilePaths backupFilePaths;
             if(checkForBackupsInFolder){//just c or (c and n)
-                _ = new NewBackup(fileList, priorBackups, folderPath, checkForBackupsInFolder);
+                backupFilePaths = new BackupFilePaths(fileList.ToArray(), priorBackups.ToArray(), folderPath, checkForBackupsInFolder);
+                //_ = new NewBackup(fileList, priorBackups, folderPath, checkForBackupsInFolder);
             }else{//check for n
-                _ = new NewBackup(fileList, priorBackups, folderPath, checkPriorBackups);
+                backupFilePaths = new BackupFilePaths(fileList.ToArray(), priorBackups.ToArray(), folderPath, checkPriorBackups);
+                //_ = new NewBackup(fileList, priorBackups, folderPath, checkPriorBackups);
             }
+            backupFilePaths.Run();
+
         }
         /// <summary>
         /// Add all priorbackups in backup folderPath

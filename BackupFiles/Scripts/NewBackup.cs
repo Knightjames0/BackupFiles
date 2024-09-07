@@ -3,8 +3,8 @@ using Util;
 
 namespace BackUp{
     public class NewBackup{
-        private List<DataPath> fileList;
-        private List<string> priorBackups;
+        private DataPath[] fileList;
+        private string[] priorBackups;
         private string folderPath;
         private bool checkPriorBackups;
         private ConcurrentDictionary<string,string> filePaths = new(32,256);
@@ -13,10 +13,9 @@ namespace BackUp{
         // Value = path in backup
 
         private const ulong MinimumFreeSpaceLeft = 16_000_000;
-        public NewBackup(List<DataPath> fileList, List<string> priorBackups, string folderPath, bool checkPriorBackups)
-        {
-            this.fileList = fileList;
-            this.priorBackups = priorBackups;
+        public NewBackup(List<DataPath> fileList, List<string> priorBackups, string folderPath, bool checkPriorBackups){
+            this.fileList = fileList.ToArray();
+            this.priorBackups = priorBackups.ToArray();
             this.folderPath = folderPath;
             this.checkPriorBackups = checkPriorBackups;
             BackupCreate();
@@ -56,7 +55,7 @@ namespace BackUp{
         /// Create a new backup of the from the paths in fileList
         /// </summary>
         private void BackupCreate(){
-            if(fileList.Count == 0){
+            if(fileList.Length == 0){
                 Console.WriteLine("No files to backup added");
                 return;
             }
@@ -69,8 +68,7 @@ namespace BackUp{
 
             //Building file to copy list
             startTime = DateTime.Now.Ticks;
-            foreach (DataPath dataPath in fileList)
-            {
+            foreach (DataPath dataPath in fileList){
                 string path = dataPath.GetFullPath();
                 if(dataPath.fileType == '-'){//file
                     backupSize += AddFileTypePath(path);
@@ -162,7 +160,7 @@ namespace BackUp{
             }
             return true;
         }
-        private static bool CheckEnoughDriveSpace(string location, ulong backupSize){
+        internal static bool CheckEnoughDriveSpace(string location, ulong backupSize){
             try{
                 DriveInfo driveInfo = new("" + location[0]);
                 if((ulong)driveInfo.AvailableFreeSpace - MinimumFreeSpaceLeft < backupSize){ //require atleast 16 MB of free space left for any unforeseen issues
@@ -175,7 +173,7 @@ namespace BackUp{
                 return false;
             }
         }
-        private static bool GetUserConfirmation(ulong backupSize){
+        internal static bool GetUserConfirmation(ulong backupSize){
             Console.Write("The file size to be backed up is: {0:N3} Megabytes would you like to continue? (y/n) ", backupSize / 1_000_000f);
             string answer = "";
             while(answer != "y" && answer != "n"){
@@ -216,7 +214,7 @@ namespace BackUp{
             }
             return false;
         }
-        private static bool CreateDirectoryTreeDown(string path){ //should not be called out side of CreateDirectoryTree
+        internal static bool CreateDirectoryTreeDown(string path){ //should not be called out side of CreateDirectoryTree
             if(!Directory.Exists(path)){
                 short t = (short)path.LastIndexOf('\\',path.Length - 2);
                 if(t == -1){
