@@ -30,3 +30,28 @@ public class FilePathData{
         return new FilePathData(a.Size + b.Size, a.FileCalls + b.FileCalls);
     }
 }
+public struct FilePathDataT{
+    public readonly char DriveLetter;
+    public readonly int Start;
+    public readonly int Length;
+    public uint FileCalls;
+    public ulong Size;
+    public FilePathDataT(int start, int length , char driveLetter, ulong size = 0, uint fileCalls = 0) {
+        Start = start;
+        Length = length;
+        Size = size;
+        FileCalls = fileCalls;
+        DriveLetter = driveLetter;
+    }
+    public static FilePathData operator + (FilePathDataT a, FilePathData b){
+        return new FilePathData(a.Size + b.Size, a.FileCalls + b.FileCalls);
+    }
+}
+public struct DriveCopyData{
+    public readonly char DriveLetter;
+    public uint FilesFailedToCopy; 
+    public DriveCopyData(char driveLetter, uint filesFailedToCopy = 0) {
+        DriveLetter = driveLetter;
+        FilesFailedToCopy = filesFailedToCopy;
+    }
+}
