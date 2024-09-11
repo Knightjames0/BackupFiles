@@ -1,19 +1,19 @@
 
-
-
 namespace BackUp;
 //File Metadata
-public readonly struct FileData : IComparable<FileData>{
+public readonly struct MetaData : IComparable<MetaData>{
     public readonly string FullPath;
     public readonly long Size;
-    public readonly DateTimeOffset DateTimeSet;
-    public FileData(string fullPath, long size, DateTimeOffset dateTimeSet){
+    public readonly long DateTime;
+    public MetaData(string fullPath, long size, DateTimeOffset dateTimeOffset){
         FullPath = fullPath;
         Size = size;
-        DateTimeSet = dateTimeSet.ToUniversalTime();
+        DateTime = dateTimeOffset.ToUniversalTime().Ticks;
     }
 
-    public int CompareTo(FileData other){
+    public static MetaData[] Empty { get{ return new MetaData[0]; } }
+
+    public int CompareTo(MetaData other){
         return FullPath.CompareTo(other.FullPath);
     }
 }
@@ -49,9 +49,9 @@ public struct FilePathDataT{
 }
 public struct DriveCopyData{
     public readonly char DriveLetter;
-    public uint FilesFailedToCopy; 
-    public DriveCopyData(char driveLetter, uint filesFailedToCopy = 0) {
+    public long UnCompressSize; 
+    public DriveCopyData(char driveLetter, long unCompressSize = 0) {
         DriveLetter = driveLetter;
-        FilesFailedToCopy = filesFailedToCopy;
+        UnCompressSize = unCompressSize;
     }
 }
