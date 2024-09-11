@@ -51,6 +51,7 @@ public class BackupFilePaths{
         startTime = DateTime.Now.Ticks;
         Tuple<uint, char[]> output = GetFilesToBeCopied(logQueue);
         char[] driveLetters = output.Item2;
+        logQueue.Enqueue("Info: fileCalls: " + _filePathTotal.FileCalls);
         msg = string.Format("Info: Finished building files to copy list in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
         logQueue.Enqueue(msg);
         Logs.WriteLog(logQueue.ToArray());
