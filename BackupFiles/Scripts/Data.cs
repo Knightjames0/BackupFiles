@@ -22,7 +22,7 @@ namespace BackUp{
                 return;
             }
             if(args.options is not null){
-                if(args.options.Count > 1){
+                if(args.options.Count > 0){
                     Console.WriteLine("Error: Invalid options passed in to add.");
                     return;
                 }
@@ -117,7 +117,7 @@ namespace BackUp{
                 return;
             }
             if(args.options is not null){
-                if(args.options.Count > 1){
+                if(args.options.Count > 0){
                     Console.WriteLine("Error: Invalid options passed in to remove.");
                     return;
                 }
@@ -172,17 +172,6 @@ namespace BackUp{
             bool checkPriorBackups = false;
             bool checkForBackupsInFolder = false;
             List<string> priorBackups = new();
-            
-            //backup location path
-            string folderPath = args.arguments[0];
-            args.arguments.RemoveAt(0);
-            if(folderPath[^1] != '\\'){
-                folderPath += '\\';
-            }
-            if(!Directory.Exists(folderPath)){
-                Utils.PrintAndLog("Error: Path selected to backup to doesn't exist: " + folderPath);
-                return;
-            }
 
             //Check Options
             if(args.options is not null){
@@ -199,6 +188,18 @@ namespace BackUp{
                     return;
                 }
             }
+
+            //backup location path
+            string folderPath = args.arguments[0];
+            args.arguments.RemoveAt(0);
+            if(folderPath[^1] != '\\'){
+                folderPath += '\\';
+            }
+            if(!Directory.Exists(folderPath)){
+                Utils.PrintAndLog("Error: Path selected to backup to doesn't exist: " + folderPath);
+                return;
+            }
+            
             //Add all priorbackups in backup folderPath
             if(checkForBackupsInFolder){
                 if(PriorBackupPaths(priorBackups, folderPath)){
