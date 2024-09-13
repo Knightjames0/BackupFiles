@@ -1,28 +1,28 @@
 namespace BackUp{
     public struct DataPath{
-        public readonly char fileType;
-        private readonly char drive;
-        private readonly string path;
+        public readonly char FileType;
+        public readonly char Drive;
+        public readonly string Path;
         public DataPath(char fileType, string fullPath){
-            this.fileType = fileType;
-            drive = fullPath[0];
-            path = fullPath[2..];
+            this.FileType = fileType;
+            Drive = fullPath[0];
+            Path = fullPath[3..];
         }
         public DataPath(string fullPath){
-            fileType = '?';//invalid
-            drive = fullPath[0];
-            path = fullPath[2..];
+            FileType = '?';//invalid
+            Drive = fullPath[0];
+            Path = fullPath[3..];
         }
         public override string ToString()
         {
-            return "" + fileType + ':' + drive + ':' + path;
+            return "" + FileType + ':' + Drive + ":\\" + Path;
         }
         public string GetFullPath(){
-            return  "" + drive + ':' + path;
+            return  "" + Drive + ":\\" + Path;
         }
         public bool IsEqual(DataPath other){
             //DataPath isn't nullable
-            return this.drive == other.drive && this.path == other.path;
+            return this.Drive == other.Drive && this.Path == other.Path;
         }
         /// <summary>
         /// Checks if the instance is placed before, after or same to the other DataPath
@@ -34,13 +34,13 @@ namespace BackUp{
         /// <para>Greater than zero – This instance is after other.</para></returns>
         public int CompareTo(DataPath other){
             //DataPath isn't nullable
-            if(this.drive > other.drive){
+            if(this.Drive > other.Drive){
                 return 1;
             }
-            if(this.drive < other.drive){
+            if(this.Drive < other.Drive){
                 return -1;
             }
-            return this.path.CompareTo(other.path);
+            return this.Path.CompareTo(other.Path);
         }
     }
 }

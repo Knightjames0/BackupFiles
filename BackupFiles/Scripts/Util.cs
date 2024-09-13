@@ -2,15 +2,12 @@ using BackUp;
 
 namespace Util
 {
-    public readonly struct Args
-    {
+    public readonly struct Args{
         public readonly string command;
         public readonly List<char>? options;
         public readonly List<string>? arguments;
-        public Args (string inputString)
-        {
-            if (inputString.Length < 1)
-            {
+        public Args (string inputString){
+            if (inputString.Length < 1){
                 Utils.PrintAndLog("Error: Nothing passed in");
                 command = "";
                 return;
@@ -22,12 +19,14 @@ namespace Util
             }
             // Get Command
             short index = (short)inputString.IndexOf(' ');
-            if (index == -1)
-            {
+            if (index == -1){
                 command = inputString[0..];
                 return;
             }
             command = inputString[0..index];
+            if (index + 1 >= inputString.Length){
+                return;
+            }
             // Get Options
             if(inputString[index+1] == '-'){
                 options = new();
@@ -55,28 +54,27 @@ namespace Util
             arguments = new();
             bool skipSpace = false;
             string temp = "";
-            for (short i = index; i < inputString.Length; i++)
-            {
+            for (short i = index; i < inputString.Length; i++){
                 char c = inputString[i];
-                if (c == '"') // " are use when spaces are in a file or directory name
-                {
+                if (c == '"'){ // " are use when spaces are in a file or directory name
                     skipSpace = !skipSpace;
                 }
-                else if (!skipSpace && c == ' ')
-                {
+                else if (!skipSpace && c == ' '){
                     if (temp != "")
                     {
-                        arguments.Add(temp);
+                        if(temp.Length > 0){//prevent empty strings
+                            arguments.Add(temp);
+                        }
                         temp = "";
                     }
                     continue;
-                }
-                else
-                {
+                }else{
                     temp += c;
                 }
             }
-            arguments.Add(temp);
+            if(temp.Length > 0){//prevent empty strings
+                arguments.Add(temp);
+            }
             return;
         }
         private bool CharExistInList(List<char> options, char c){
@@ -98,8 +96,7 @@ namespace Util
             return false;
         }
     }
-    public class Utils
-    {
+    public class Utils{
         public static void PrintAndLog(string msg){
             Console.WriteLine(msg);
             Logs.WriteLog(msg);
