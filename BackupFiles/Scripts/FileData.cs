@@ -17,34 +17,32 @@ public readonly struct MetaData : IComparable<MetaData>{
         return FullPath.CompareTo(other.FullPath);
     }
 }
-public class FilePathData{
-    public readonly char DriveLetter;
+public struct BackupData{
     public ulong Size;
     public uint FileCalls;
-    public FilePathData(ulong fileSize = 0, uint fileCalls = 0, char driveLetter = '.') {
+    public BackupData(ulong fileSize = 0, uint fileCalls = 0) {
         Size = fileSize;
         FileCalls = fileCalls;
-        DriveLetter = driveLetter;
     }
-    public static FilePathData operator + (FilePathData a, FilePathData b){
-        return new FilePathData(a.Size + b.Size, a.FileCalls + b.FileCalls);
+    public static BackupData operator + (BackupData a, BackupData b){
+        return new BackupData(a.Size + b.Size, a.FileCalls + b.FileCalls);
     }
 }
-public struct FilePathDataT{
+public struct FileCopyData{
     public readonly char DriveLetter;
     public readonly int Start;
     public readonly int Length;
     public uint FileCalls;
     public ulong Size;
-    public FilePathDataT(int start, int length , char driveLetter, ulong size = 0, uint fileCalls = 0) {
+    public FileCopyData(int start, int length , char driveLetter, ulong size = 0, uint fileCalls = 0) {
         Start = start;
         Length = length;
         Size = size;
         FileCalls = fileCalls;
         DriveLetter = driveLetter;
     }
-    public static FilePathData operator + (FilePathDataT a, FilePathData b){
-        return new FilePathData(a.Size + b.Size, a.FileCalls + b.FileCalls);
+    public static BackupData operator + (FileCopyData a, BackupData b){
+        return new BackupData(a.Size + b.Size, a.FileCalls + b.FileCalls);
     }
 }
 public struct DriveCopyData{
