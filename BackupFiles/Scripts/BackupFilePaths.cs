@@ -10,7 +10,7 @@ public class BackupFilePaths{
     private string _folderPath;
     private bool _checkPriorBackups;
     private bool _backupTozip;
-    private FilePathData _filePathTotal;
+    private BackupData _filePathTotal;
     public readonly long TimeAllowOffset = new DateTime(0).AddMinutes(70).Ticks;
     private ConcurrentDictionary<string,string> _filePathsToCopy = new(4,256);
     // key = path on device, Value = path in backup
@@ -22,7 +22,7 @@ public class BackupFilePaths{
         this._checkPriorBackups = checkPriorBackups;
         this._priorBackups = priorBackups;
         this._backupTozip = backupToZip;
-        this._filePathTotal = new FilePathData();
+        this._filePathTotal = new BackupData();
         _priorMetaData = [];
     }
     /// <summary>
@@ -37,7 +37,7 @@ public class BackupFilePaths{
         ConcurrentQueue<string> logQueue = new();
         string msg;
         long startTime;
-        _filePathTotal = new FilePathData();
+        _filePathTotal = new BackupData();
         
         //Get list of prior files
         if(_checkPriorBackups){
@@ -345,22 +345,22 @@ public class BackupFilePaths{
 
 
         //Get list of files to copy
-        List<FilePathDataT> filePathDataTemp = new List<FilePathDataT>(4);
+        List<FileCopyData> filePathDataTemp = new List<FileCopyData>(4);
         List<Thread> threads = new List<Thread>();
         int startIndex = 0;
         char c = _fileList[0].Drive;
         for (int i = 0; i < _fileList.Length; i++){
             if(_fileList[i].Drive != c){
-                filePathDataTemp.Add(new FilePathDataT(startIndex, i - startIndex, c));
+                filePathDataTemp.Add(new FileCopyData(startIndex, i - startIndex, c));
                 c = _fileList[i].Drive;
 
                 startIndex = i;
             }
         }
-        filePathDataTemp.Add(new FilePathDataT(startIndex, _fileList.Length - startIndex, c));
+        filePathDataTemp.Add(new FileCopyData(startIndex, _fileList.Length - startIndex, c));
 
         //Rebuild filePathData for threading enviroment
-        FilePathDataT[] filePathData = filePathDataTemp.ToArray();
+        FileCopyData[] filePathData = filePathDataTemp.ToArray();
         for (int i = 0; i < filePathData.Length; i++){
             int temp = i;
             Thread tempThreadFinal = new Thread(() => GetFilePathsForDrive(_fileList, logQueue, ref filePathData, temp));
@@ -382,7 +382,7 @@ public class BackupFilePaths{
         logQueue.Clear();  
         return driveLetters;
     }
-    private void GetFilePathsForDrive(DataPath[] dataPaths, ConcurrentQueue<string> logQueue, ref FilePathDataT[] data, int index){
+    private void GetFilePathsForDrive(DataPath[] dataPaths, ConcurrentQueue<string> logQueue, ref FileCopyData[] data, int index){
         Span<DataPath> datapathsTemp = new Span<DataPath>(dataPaths, data[index].Start, data[index].Length);
         foreach (DataPath dataPath in datapathsTemp){
             string path = dataPath.GetFullPath();
@@ -405,7 +405,7 @@ public class BackupFilePaths{
         }
     }
 
-    private void GetDirectoriesTreeUp(ref string path, ref FilePathDataT[] data, ref int index, ConcurrentQueue<string> logQueue){
+    private void GetDirectoriesTreeUp(ref string path, ref FileCopyData[] data, ref int index, ConcurrentQueue<string> logQueue){
         if(path.Length > Data.MaxFileLength){ //don't allow for large file paths to be copied can prevent infinite loops
             Console.WriteLine("Error: Too long of file name: " + path);
             logQueue.Enqueue("Error: Too long of file name: " + path);
@@ -478,7 +478,7 @@ public class BackupFilePaths{
         return false;
     }
 
-    private void AddFileTypePath(ref string path, ref FilePathDataT[] data, ref int index, ConcurrentQueue<string> logQueue){
+    private void AddFileTypePath(ref string path, ref FileCopyData[] data, ref int index, ConcurrentQueue<string> logQueue){
         FileInfo fileInfo;
         string msg;
         if(!File.Exists(path)){
