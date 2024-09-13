@@ -171,6 +171,7 @@ namespace BackUp{
             }
             bool checkPriorBackups = false;
             bool checkForBackupsInFolder = false;
+            bool zipBackupFiles = false;
             List<string> priorBackups = new();
 
             //Check Options
@@ -182,6 +183,10 @@ namespace BackUp{
                 if(args.options.Contains('c')){
                     args.options.Remove('c');
                     checkForBackupsInFolder = true;
+                }
+                if(args.options.Contains('z')){
+                    args.options.Remove('z');
+                    zipBackupFiles = true;
                 }
                 if(args.options.Count > 0){
                     Console.WriteLine("Error: Invalid options passed in to backup.");
@@ -196,7 +201,7 @@ namespace BackUp{
                 folderPath += '\\';
             }
             if(!Directory.Exists(folderPath)){
-                Utils.PrintAndLog("Error: Path selected to backup to doesn't exist: " + folderPath);
+                Utils.PrintAndLog("Error: Path selected to backup to doesn't exist or can't access: " + folderPath);
                 return;
             }
             
@@ -228,13 +233,12 @@ namespace BackUp{
                         continue;
                     }
                     if(!Directory.Exists(priorBackupPath)){
-                        Utils.PrintAndLog("Error: Prior Backup Path doesn't exist: " + priorBackupPath);
+                        Utils.PrintAndLog("Error: Prior Backup Path doesn't exist or can't access: " + priorBackupPath);
                         return;
                     }
                     priorBackups.Add(priorBackupPath);
                 }
             }
-            
             //creates folder name
             folderPath += "Backup" + Utils.GetDate();
             //Add number if more then one today
@@ -248,11 +252,9 @@ namespace BackUp{
 
             BackupFilePaths backupFilePaths;
             if(checkForBackupsInFolder){//just c or (c and n)
-                backupFilePaths = new BackupFilePaths(fileList.ToArray(), priorBackups.ToArray(), folderPath, checkForBackupsInFolder);
-                //_ = new NewBackup(fileList, priorBackups, folderPath, checkForBackupsInFolder);
+                backupFilePaths = new BackupFilePaths(fileList.ToArray(), priorBackups.ToArray(), folderPath, checkForBackupsInFolder, zipBackupFiles);
             }else{//check for n
-                backupFilePaths = new BackupFilePaths(fileList.ToArray(), priorBackups.ToArray(), folderPath, checkPriorBackups);
-                //_ = new NewBackup(fileList, priorBackups, folderPath, checkPriorBackups);
+                backupFilePaths = new BackupFilePaths(fileList.ToArray(), priorBackups.ToArray(), folderPath, checkPriorBackups, zipBackupFiles);
             }
             backupFilePaths.Run();
 
@@ -284,6 +286,10 @@ namespace BackUp{
             }
             catch (Exception e){
                 Utils.PrintAndLog("Error: Prior Backup Paths in Directory. \nReason: " + e.Message);
+                return true;
+            }
+            if(priorBackups.Count == 0){
+                Utils.PrintAndLog("Error: No Prior Backups found in: " + folderPath);
                 return true;
             }
             return false;

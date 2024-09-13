@@ -9,17 +9,19 @@ public class BackupFilePaths{
     private string[] _priorBackups;
     private string _folderPath;
     private bool _checkPriorBackups;
+    private bool _backupTozip;
     private FilePathData _filePathTotal;
     public readonly long TimeAllowOffset = new DateTime(0).AddMinutes(70).Ticks;
     private ConcurrentDictionary<string,string> _filePathsToCopy = new(4,256);
     // key = path on device, Value = path in backup
     private MetaData[] _priorMetaData;
     // key = path on device
-    public BackupFilePaths(DataPath[] fileList, string[] priorBackups, string folderPath, bool checkPriorBackups){
+    public BackupFilePaths(DataPath[] fileList, string[] priorBackups, string folderPath, bool checkPriorBackups, bool backupToZip){
         this._fileList = fileList;
         this._folderPath = folderPath;
         this._checkPriorBackups = checkPriorBackups;
         this._priorBackups = priorBackups;
+        this._backupTozip = backupToZip;
         this._filePathTotal = new FilePathData();
         _priorMetaData = [];
     }
@@ -43,19 +45,18 @@ public class BackupFilePaths{
             _priorMetaData = GetPriorBackupsFileMetaData(logQueue, _priorBackups);
             msg = string.Format("Info: Finished getting list of prior files: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
             logQueue.Enqueue(msg);
-            Logs.WriteLog(logQueue.ToArray());
-            logQueue.Clear();
         }
 
         //Building file to be copied to backup
         startTime = DateTime.Now.Ticks;
-        Tuple<uint, char[]> output = GetFilesToBeCopied(logQueue);
-        char[] driveLetters = output.Item2;
+        char[] driveLetters = GetFilesToBeCopied(logQueue);
         logQueue.Enqueue("Info: fileCalls: " + _filePathTotal.FileCalls);
         msg = string.Format("Info: Finished building files to copy list in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
         logQueue.Enqueue(msg);
+        
         Logs.WriteLog(logQueue.ToArray());
         logQueue.Clear();
+
         if(!NewBackup.CheckEnoughDriveSpace(_folderPath, _filePathTotal.Size)){
             Logs.WriteLog(logQueue.ToArray());
             logQueue.Clear();
@@ -63,7 +64,7 @@ public class BackupFilePaths{
         }
 
         //ask user if size is ok
-        if(!NewBackup.GetUserConfirmation(_filePathTotal.Size)){
+        if(!NewBackup.GetUserConfirmation(string.Format("The file size to be backed up is: {0:N3} Megabytes would you like to continue?", _filePathTotal.Size / 1_000_000f))){
             Console.WriteLine("User didn't continue with backup progress");
             Logs.WriteLog(logQueue.ToArray());
             logQueue.Clear();
@@ -74,7 +75,7 @@ public class BackupFilePaths{
         Console.WriteLine("Backup Started");
         startTime = DateTime.Now.Ticks;
 
-        //Create directory tree
+        //Create directory down tree
         if(!NewBackup.CreateDirectoryTreeDown(_folderPath)){
             msg = "Error: Failed to build Base File Tree";
             logQueue.Enqueue(msg);
@@ -83,14 +84,30 @@ public class BackupFilePaths{
             logQueue.Clear();
             return;
         }
+        if(!_backupTozip){
+            //Regular File Tree
+            if(!CreateDirectoryFromDataPaths(_folderPath, _fileList)){
+                msg = "Error: Failed to create directory tree";
+                logQueue.Enqueue(msg);
+                Console.WriteLine(msg);
+                Logs.WriteLog(logQueue.ToArray());
+                logQueue.Clear();
+                return;
+            }
+        }
         msg = string.Format("Info: File Tree Built in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
         logQueue.Enqueue(msg);
         Console.WriteLine("File Tree Built");
-
-        //Copy Files to drive specific zip files
-        ulong unCompressSize;
         startTime = DateTime.Now.Ticks;
-        unCompressSize = CopyFilesToDriveSpecificZips(driveLetters, logQueue);
+        //Copy Files to drive specific zip files
+        ulong unCompressSize = 0;
+        if(_backupTozip){
+            //Zip
+            unCompressSize = CopyFilesToDriveSpecificZips(driveLetters, logQueue);
+        }else{
+            //Regular File Tree
+            unCompressSize = CopyFilesToFolders(logQueue);
+        }
 
 
         msg = string.Format("Info: Finished coping files in: {0:F2}ms",(DateTime.Now.Ticks - startTime) / 10000f);
@@ -105,6 +122,7 @@ public class BackupFilePaths{
         Logs.WriteLog(logQueue.ToArray());
         logQueue.Clear();   
     }
+
     //Get file Metadata from old backups
     private MetaData[] GetPriorBackupsFileMetaData(ConcurrentQueue<string> logQueue, string[] priorBackupPaths){
         DirectoryInfo[] directoryInfo = new DirectoryInfo[_priorBackups.Length];
@@ -118,6 +136,11 @@ public class BackupFilePaths{
         }
         if(directoryInfo == null){
             string msg = "Error: DirectoryInfo was null on GetPriorFileData";
+            logQueue.Enqueue(msg);
+            return MetaData.Empty;
+        }
+        if(directoryInfo.Length == 0){
+            string msg = "Error: DirectoryInfo was empty on GetPriorFileData";
             logQueue.Enqueue(msg);
             return MetaData.Empty;
         }
@@ -140,13 +163,13 @@ public class BackupFilePaths{
                     //directory paths backup method
                     threads[k] = new Thread(() => GetPriorFileDataFromDirectories(dir, fileData, logQueue));
                     if(threads[k] != null){
-                    threads[k].Start();
+                        threads[k].Start();
                     }
                 }else{
                     //zip compression backup method
                     threads[k] = new Thread(() => GetPriorFileDataFromZip(dir, fileData, logQueue));
                     if(threads[k] != null){
-                    threads[k].Start();
+                        threads[k].Start();
                     }
                 }
                 k++;
@@ -210,7 +233,7 @@ public class BackupFilePaths{
                 foreach(var dir2 in temp.GetDirectories()){
                     directories.Push(dir2);
                 }
-                drive = temp.FullName[0] + ":";
+                drive = temp.FullName[dirPath-1] + ":"; //For getting the drive letter from the file path
                 foreach(var file in temp.GetFiles()){
                     //Rebuild drive file path
                     string fileFullName = drive + file.FullName[dirPath..];
@@ -261,9 +284,6 @@ public class BackupFilePaths{
     /// <summary>
     /// Copies all files in _filePathsToCopy and creates the zip files on a per drive basis
     /// </summary>
-    /// <param name="driveLetters"></param>
-    /// <param name="logQueue"></param>
-    /// <returns></returns>
     private ulong CopyFilesToDriveSpecificZips(char[] driveLetters, ConcurrentQueue<string> logQueue){
         
         //throw new NotImplementedException();
@@ -279,7 +299,6 @@ public class BackupFilePaths{
             threads[i] = thread;
             threads[i].Start();
         }
-
 
         for(int i = 0; i < driveLetters.Length; i++){
             threads[i].Join();
@@ -321,7 +340,7 @@ public class BackupFilePaths{
         }
     }
 
-    private Tuple<uint, char[]> GetFilesToBeCopied(ConcurrentQueue<string> logQueue){
+    private char[] GetFilesToBeCopied(ConcurrentQueue<string> logQueue){
         //Already got files from prior backups
 
 
@@ -329,11 +348,11 @@ public class BackupFilePaths{
         List<FilePathDataT> filePathDataTemp = new List<FilePathDataT>(4);
         List<Thread> threads = new List<Thread>();
         int startIndex = 0;
-        char c = _fileList[0].drive;
+        char c = _fileList[0].Drive;
         for (int i = 0; i < _fileList.Length; i++){
-            if(_fileList[i].drive != c){
+            if(_fileList[i].Drive != c){
                 filePathDataTemp.Add(new FilePathDataT(startIndex, i - startIndex, c));
-                c = _fileList[i].drive;
+                c = _fileList[i].Drive;
 
                 startIndex = i;
             }
@@ -361,23 +380,23 @@ public class BackupFilePaths{
         }
         Logs.WriteLog(logQueue.ToArray());
         logQueue.Clear();  
-        return new Tuple<uint, char[]>(_filePathTotal.FileCalls, driveLetters);
+        return driveLetters;
     }
     private void GetFilePathsForDrive(DataPath[] dataPaths, ConcurrentQueue<string> logQueue, ref FilePathDataT[] data, int index){
         Span<DataPath> datapathsTemp = new Span<DataPath>(dataPaths, data[index].Start, data[index].Length);
         foreach (DataPath dataPath in datapathsTemp){
             string path = dataPath.GetFullPath();
-            if(dataPath.fileType == '-'){//file
+            if(dataPath.FileType == '-'){//file
                 AddFileTypePath(ref path, ref data, ref index, logQueue);
             }
-            else if(dataPath.fileType == 'd'){//directory tree
+            else if(dataPath.FileType == 'd'){//directory tree
                 if(!Directory.Exists(path)){
                     Console.WriteLine("Error: Directory doesn't exist: " + path);
                     logQueue.Enqueue("Error: Directory doesn't exist: " + path);
                     continue;
                 }
                 //Add files in directories to list
-                CreateDirectoryTreeUp(ref path, ref data, ref index, logQueue);
+                GetDirectoriesTreeUp(ref path, ref data, ref index, logQueue);
             }
             else{
                 Console.WriteLine("Error: Failed to handle: " + path);
@@ -386,7 +405,7 @@ public class BackupFilePaths{
         }
     }
 
-    private void CreateDirectoryTreeUp(ref string path, ref FilePathDataT[] data, ref int index, ConcurrentQueue<string> logQueue){
+    private void GetDirectoriesTreeUp(ref string path, ref FilePathDataT[] data, ref int index, ConcurrentQueue<string> logQueue){
         if(path.Length > Data.MaxFileLength){ //don't allow for large file paths to be copied can prevent infinite loops
             Console.WriteLine("Error: Too long of file name: " + path);
             logQueue.Enqueue("Error: Too long of file name: " + path);
@@ -409,7 +428,7 @@ public class BackupFilePaths{
             foreach (DirectoryInfo dir in directories){
                 string dirPath = dir.FullName + '\\';
                 if(Directory.Exists(dirPath)){
-                    CreateDirectoryTreeUp(ref dirPath, ref data, ref index, logQueue);
+                    GetDirectoriesTreeUp(ref dirPath, ref data, ref index, logQueue);
                 }
             }
         }catch(Exception e){
@@ -451,7 +470,7 @@ public class BackupFilePaths{
         if(found){
             if(fileData.Size == _priorMetaData[m].Size){
                 //Daylightsavings bug mabye... where .zip backups files are offset from by an hour from file explore e.g +/- 1 hour
-                if(fileData.DateTime + TimeAllowOffset > _priorMetaData[m].DateTime && _priorMetaData[m].DateTime > fileData.DateTime - TimeAllowOffset){
+                if(fileData.DateTime + TimeAllowOffset >= _priorMetaData[m].DateTime && _priorMetaData[m].DateTime >= fileData.DateTime - TimeAllowOffset){
                     return true;
                 }
             }
@@ -483,5 +502,81 @@ public class BackupFilePaths{
         if(_filePathsToCopy.TryAdd(fileInfo.FullName, path[3..])){
             data[index].Size += (ulong)fileInfo.Length;
         }
+    }
+    //regualer file coping
+    private ulong CopyFilesToFolders(ConcurrentQueue<string> logQueue){
+        ulong filesCopiedSize = 0;
+        Parallel.ForEach(_filePathsToCopy,file => {
+            string devicePath = file.Key;
+            char drive = devicePath[0];
+            string backupPath = _folderPath + drive + '\\' + file.Value;
+            ulong val = CopyFile(devicePath, backupPath, logQueue);
+            Interlocked.Add(ref filesCopiedSize, val);//add to files failed to copy
+        });
+        return filesCopiedSize;
+    }
+
+    //Copies a file and returns the backupPath's file size
+    private ulong CopyFile(string sourcePath, string backupPath, ConcurrentQueue<string> logQueue){
+        ulong size;
+        string msg;
+        if(File.Exists(backupPath)){
+            msg = "Warning: File already exists " + backupPath;
+            logQueue.Enqueue(msg);
+            return 0;
+        }
+        try{
+            File.Copy(sourcePath,backupPath);
+            size = (ulong)new FileInfo(backupPath).Length;
+        }catch(Exception e){
+            msg = "Error: Copying file to backup failed: " + sourcePath + " \nReason: " + e;
+            logQueue.Enqueue(msg);
+            return 0;
+        }
+        return size;
+    }
+
+    //Build the directory up and down for each Datapath
+    private bool CreateDirectoryFromDataPaths(string folderPath, DataPath[] fileList){
+        string path;
+        string sourcePath;
+        foreach(DataPath dataPath in fileList){
+            if(dataPath.FileType != 'd'){
+                path = folderPath + dataPath.Drive + "\\" + dataPath.Path;
+                int lastSlash = path.LastIndexOf("\\") + 1;
+                path = path[..lastSlash];
+                if(!NewBackup.CreateDirectoryTreeDown(path)){
+                return false;
+                }
+                continue;
+            }
+            //Directories
+            path = folderPath + dataPath.Drive + "\\" + dataPath.Path;
+            sourcePath = dataPath.GetFullPath();
+            Stack<DirectoryInfo> next = new();
+            if(!NewBackup.CreateDirectoryTreeDown(path)){
+                return false;
+            }
+            try{
+                next.Push(new DirectoryInfo(sourcePath));
+                while(next.Count > 0){
+                    DirectoryInfo dirInfo = next.Pop();
+                    string tempPath = folderPath + dirInfo.FullName[0] + dirInfo.FullName[2..];
+                    if(tempPath.Length >= Data.MaxFileLength){
+                        throw new PathTooLongException("Error: Path length was greater then max length: " + Data.MaxFileLength);
+                    }
+                    if(!Directory.Exists(tempPath)){
+                        Directory.CreateDirectory(tempPath);
+                    }
+                    foreach(DirectoryInfo directoryInfo in dirInfo.GetDirectories()){
+                        next.Push(directoryInfo);
+                    }
+                }
+            }catch(Exception e){
+                Utils.PrintAndLog(e.Message);
+                return false;
+            }
+        }
+        return true;  
     }
 }
