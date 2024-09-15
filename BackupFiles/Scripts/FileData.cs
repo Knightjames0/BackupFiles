@@ -47,9 +47,9 @@ public struct FileCopyData{
 }
 public struct DriveCopyData{
     public readonly char DriveLetter;
-    public long UnCompressSize; 
-    public DriveCopyData(char driveLetter, long unCompressSize = 0) {
+    public int FilesFailedToCopy; 
+    public DriveCopyData(char driveLetter, int filesFailedToCopy = 0) {
         DriveLetter = driveLetter;
-        UnCompressSize = unCompressSize;
+        FilesFailedToCopy = filesFailedToCopy;
     }
 }
