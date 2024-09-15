@@ -401,7 +401,10 @@ public class BackupFilePaths{
             }
         }
     }
-
+    /// <summary>
+    /// Add all files in a folder to a list of files to be copied
+    /// </summary>
+    /// <param name="path">Starting point</param>
     private void GetDirectoriesTreeUp(ref string path, ref FileCopyData[] data, ref int index, ConcurrentQueue<string> logQueue){
         if(path.Length > Data.MaxFileLength){ //don't allow for large file paths to be copied can prevent infinite loops
             Console.WriteLine("Error: Too long of file name: " + path);
@@ -417,9 +420,15 @@ public class BackupFilePaths{
             logQueue.Enqueue("Error: " + path + " \nReason: " + e.Message);
             return;
         }
+        string dirPath = "";
         while(stack.Count > 0){
             dirInfo = stack.Pop();
+            
             try{
+                dirPath = dirInfo.FullName + '\\';
+                if(dirPath.Length >= Data.MaxFileLength){
+                    throw new PathTooLongException("Error: Path length was greater then max length: " + Data.MaxFileLength);
+                }
                 //Handle directories found
                 DirectoryInfo[] directoryInfos = dirInfo.GetDirectories();
                 foreach(DirectoryInfo dir in directoryInfos){
@@ -427,7 +436,6 @@ public class BackupFilePaths{
                 }
                 //Handle fiels
                 FileInfo[] fileInfos = dirInfo.GetFiles(); //get all files in current directory
-                string dirPath = dirInfo.FullName + '\\';
                 foreach (FileInfo file in fileInfos){
                     data[index].FileCalls++;
                     if(IsFileInPriorBackups(file)){
@@ -439,8 +447,14 @@ public class BackupFilePaths{
                     //else Already exists
                 }
             }catch(Exception e){
-                Console.WriteLine("Error: " + path + " \nReason: " + e.Message);
-                logQueue.Enqueue("Error: " + path + " \nReason: " + e.Message);
+                string msg;
+                if(e is PathTooLongException){
+                    msg = "Error: Too long of file name: " + dirPath;
+                }else{
+                    msg = "Error: " + path + " \nReason: " + e.Message;
+                }
+                Console.WriteLine(msg);
+                logQueue.Enqueue(msg);
             }
         }
     }
