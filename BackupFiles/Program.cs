@@ -19,28 +19,33 @@ namespace BackUp{
         }
         public static void ParseUserInput(string input, Data data){
             Args args = new(input);
-            
-            if(args.command == "add"){
-                data.AddCommand(args);
-            }else if(args.command == "remove"){
-                data.RemoveCommand(args);
-            }else if(args.command == "backup"){
-                data.BackupCommand(args);
-            }else if(args.command == "list"){
-                data.ListCommand();
-            }else if(args.command == "help"){
-                Data.HelpInfo();
-            }else if(args.command == "version"){
-                Data.Version();
-            }else if(args.command == "exit"){
-                //it will now close the console
-                Console.WriteLine("Closing File Backup System");
-                Logs.WriteLog("Session Closed");
-                Environment.Exit(0);
-            }else if(args.command == ""){
-                //handled in Args Constructer
-            }else{
-                Utils.PrintAndLog("Invalid Command: " + args.command + "\nTry help for a list of commands");
+            switch(args.command){
+                case "add":
+                    data.AddCommand(args);
+                break;
+                case "remove":
+                    data.RemoveCommand(args);
+                break;
+                case "backup":
+                    data.BackupCommand(args);
+                break;
+                case "list":
+                    data.ListCommand();
+                break;
+                case "help":
+                    Data.HelpInfo();
+                break;
+                case "version":
+                    Data.Version();
+                break;
+                case "exit":
+                    Console.WriteLine("Closing File Backup System");
+                    Logs.WriteLog("Session Closed");
+                    Environment.Exit(0);
+                break;
+                default:
+                    Utils.PrintAndLog("Invalid Command: " + args.command + "\nTry help for a list of commands");
+                break;
             }
         }
     }

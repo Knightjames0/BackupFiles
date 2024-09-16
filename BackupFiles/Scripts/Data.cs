@@ -22,7 +22,7 @@ namespace BackUp{
                 return;
             }
             if(args.options is not null){
-                if(args.options.Count > 1){
+                if(args.options.Count > 0){
                     Console.WriteLine("Error: Invalid options passed in to add.");
                     return;
                 }
@@ -98,9 +98,10 @@ namespace BackUp{
                 "add [file...] - add file paths or directory paths to backup. For file paths with spaces inclose with double quotes\".\n",
                 "remove [file...] - remove file paths or directory paths from backup. For file paths with spaces inclose with double quotes \".\n",
                 "list - Provides a sorted list of all paths added\n",
-                "backup [file] - Creates one of all the files add the inputed location and must have a destination file path.\n",
-                "backup -n [file] [file...] - Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.\n",
-                "backup -c [file] - Check for any Directories in the same folder that are old backups and copies only ones that don't exist in other backups.",
+                "backup -[options] [file] - Creates one of all the files add the inputed location and must have a destination file path.\n",
+                "backup -n [file] [file...] - Option, Creates one of all the files add the inputed location and copies only ones that don't exist in other backups.\n",
+                "backup -c [file] - Option, Check for any Directories in the same folder that are old backups and copies only ones that don't exist in other backups.\n",
+                "backup -z [file] - Option, Compress the backup to zip file seperated by drive.\n",
                 "version - Display Version.\n",
             };
             for(int i = 0; i < helpFile.Length; i++){
@@ -117,7 +118,7 @@ namespace BackUp{
                 return;
             }
             if(args.options is not null){
-                if(args.options.Count > 1){
+                if(args.options.Count > 0){
                     Console.WriteLine("Error: Invalid options passed in to remove.");
                     return;
                 }
@@ -171,18 +172,8 @@ namespace BackUp{
             }
             bool checkPriorBackups = false;
             bool checkForBackupsInFolder = false;
+            bool zipBackupFiles = false;
             List<string> priorBackups = new();
-            
-            //backup location path
-            string folderPath = args.arguments[0];
-            args.arguments.RemoveAt(0);
-            if(folderPath[^1] != '\\'){
-                folderPath += '\\';
-            }
-            if(!Directory.Exists(folderPath)){
-                Utils.PrintAndLog("Error: Path selected to backup to doesn't exist: " + folderPath);
-                return;
-            }
 
             //Check Options
             if(args.options is not null){
@@ -194,11 +185,33 @@ namespace BackUp{
                     args.options.Remove('c');
                     checkForBackupsInFolder = true;
                 }
+                if(args.options.Contains('z')){
+                    args.options.Remove('z');
+                    zipBackupFiles = true;
+                }
                 if(args.options.Count > 0){
                     Console.WriteLine("Error: Invalid options passed in to backup.");
                     return;
                 }
             }
+            
+            //is the file list empty
+            if(fileList.Count == 0){
+                Console.WriteLine("No paths have been add");
+                return;
+            }
+
+            //backup location path
+            string folderPath = args.arguments[0];
+            args.arguments.RemoveAt(0);
+            if(folderPath[^1] != '\\'){
+                folderPath += '\\';
+            }
+            if(!Directory.Exists(folderPath)){
+                Utils.PrintAndLog("Error: Path selected to backup to doesn't exist or can't access: " + folderPath);
+                return;
+            }
+            
             //Add all priorbackups in backup folderPath
             if(checkForBackupsInFolder){
                 if(PriorBackupPaths(priorBackups, folderPath)){
@@ -227,13 +240,12 @@ namespace BackUp{
                         continue;
                     }
                     if(!Directory.Exists(priorBackupPath)){
-                        Utils.PrintAndLog("Error: Prior Backup Path doesn't exist: " + priorBackupPath);
+                        Utils.PrintAndLog("Error: Prior Backup Path doesn't exist or can't access: " + priorBackupPath);
                         return;
                     }
                     priorBackups.Add(priorBackupPath);
                 }
             }
-            
             //creates folder name
             folderPath += "Backup" + Utils.GetDate();
             //Add number if more then one today
@@ -245,12 +257,14 @@ namespace BackUp{
             }
             folderPath += temp + '\\';
 
-
+            BackupFilePaths backupFilePaths;
             if(checkForBackupsInFolder){//just c or (c and n)
-                _ = new NewBackup(fileList, priorBackups, folderPath, checkForBackupsInFolder);
+                backupFilePaths = new BackupFilePaths(fileList.ToArray(), priorBackups.ToArray(), folderPath, checkForBackupsInFolder, zipBackupFiles);
             }else{//check for n
-                _ = new NewBackup(fileList, priorBackups, folderPath, checkPriorBackups);
+                backupFilePaths = new BackupFilePaths(fileList.ToArray(), priorBackups.ToArray(), folderPath, checkPriorBackups, zipBackupFiles);
             }
+            backupFilePaths.Run();
+
         }
         /// <summary>
         /// Add all priorbackups in backup folderPath
@@ -279,6 +293,10 @@ namespace BackUp{
             }
             catch (Exception e){
                 Utils.PrintAndLog("Error: Prior Backup Paths in Directory. \nReason: " + e.Message);
+                return true;
+            }
+            if(priorBackups.Count == 0){
+                Utils.PrintAndLog("Error: No Prior Backups found in: " + folderPath);
                 return true;
             }
             return false;
