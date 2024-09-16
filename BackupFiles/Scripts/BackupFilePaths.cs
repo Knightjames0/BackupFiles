@@ -425,7 +425,10 @@ public class BackupFilePaths{
             dirInfo = stack.Pop();
             
             try{
-                dirPath = dirInfo.FullName + '\\';
+                dirPath = dirInfo.FullName;
+                if(dirPath[^1] != '\\'){ //ensure all directory path end with '\\'
+                    dirPath += '\\';
+                }
                 if(dirPath.Length >= Data.MaxFileLength){
                     throw new PathTooLongException("Error: Path length was greater then max length: " + Data.MaxFileLength);
                 }
@@ -434,7 +437,7 @@ public class BackupFilePaths{
                 foreach(DirectoryInfo dir in directoryInfos){
                     stack.Push(dir);
                 }
-                //Handle fiels
+                //Handle files
                 FileInfo[] fileInfos = dirInfo.GetFiles(); //get all files in current directory
                 foreach (FileInfo file in fileInfos){
                     data[index].FileCalls++;

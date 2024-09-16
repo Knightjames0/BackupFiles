@@ -194,6 +194,12 @@ namespace BackUp{
                     return;
                 }
             }
+            
+            //is the file list empty
+            if(fileList.Count == 0){
+                Console.WriteLine("No paths have been add");
+                return;
+            }
 
             //backup location path
             string folderPath = args.arguments[0];
